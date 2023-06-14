@@ -181,3 +181,5 @@ yarn-error.log
 # End of https://www.toptal.com/developers/gitignore/api/vue,vuejs,visualstudiocode,node
 
 문제.md
+
+.env
