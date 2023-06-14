@@ -1,21 +1,21 @@
 export class CreateManagementDto {}
 
-export class BrandDto {
+export class CreateBrandDto {
   id: number;
   name: string;
 }
 
-export class CategoryDto {
+export class CreateCategoryDto {
   id: number;
   name: string;
 }
 
-export class ProductDto {
+export class CreateProductDto {
   id: number;
   name: string;
-  brand: BrandDto;
-  category: CategoryDto;
-  gender: string;
+  brand: CreateBrandDto;
+  category: CreateCategoryDto;
+  sex: string;
   isKids: boolean;
   salesQuantity: number;
 }
