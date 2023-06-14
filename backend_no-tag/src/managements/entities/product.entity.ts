@@ -11,25 +11,25 @@ import { Category } from './category.entity';
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
-  id: number;
+  product_id: number;
 
   @Column()
-  name: string;
+  product_name: string;
 
   @ManyToOne(() => Brand)
   @JoinColumn()
-  brand: Brand;
+  brand_id: Brand;
 
   @ManyToOne(() => Category)
   @JoinColumn()
-  category: Category;
+  category_id: Category;
 
   @Column({ default: '' })
   sex: string;
 
   @Column({ default: false })
-  isKids: boolean;
+  is_Kids: boolean;
 
   @Column({ default: 0 })
-  salesQuantity: number;
+  sales_quantity: number;
 }

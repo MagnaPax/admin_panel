@@ -3,8 +3,12 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity()
 export class Brand {
   @PrimaryGeneratedColumn()
-  id: number;
+  brand_id: number;
 
+  // @Column({ default: '' })
+  // brand_name: string;
+
+  // @Column({ nullable: true, default: '기본 브랜드' })
   @Column()
-  name: string;
+  brand_name: string;
 }
