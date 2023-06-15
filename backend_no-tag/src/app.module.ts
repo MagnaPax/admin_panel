@@ -1,15 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ManagementsModule } from './managements/managements.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ormConfig } from './orm.config';
+import { BrandModule } from './brand/brand.module';
 
 @Module({
-  imports: [
-    ManagementsModule,
-    TypeOrmModule.forRootAsync({ useFactory: ormConfig }),
-  ],
+  imports: [TypeOrmModule.forRootAsync({ useFactory: ormConfig }), BrandModule],
   controllers: [AppController],
   providers: [AppService],
 })
