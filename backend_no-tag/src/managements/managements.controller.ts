@@ -1,34 +1,48 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ManagementsService } from './managements.service';
 import { CreateManagementDto } from './dto/create-management.dto';
+import { CreateBrandDto } from './dto/create-brand.dto';
+
 import { UpdateManagementDto } from './dto/update-management.dto';
+import { UpdateBrandDto } from './dto/update-brand.dto';
 
 @Controller('managements')
 export class ManagementsController {
   constructor(private readonly managementsService: ManagementsService) {}
 
-  @Post()
-  create(@Body() createManagementDto: CreateManagementDto) {
-    return this.managementsService.create(createManagementDto);
+  @Post('brand')
+  createBrand(@Body() createBrandDto: CreateBrandDto) {
+    return this.managementsService.createBrand(createBrandDto);
   }
 
-  @Get()
-  findAll() {
-    return this.managementsService.findAll();
+  @Get('brand')
+  findAllBrand() {
+    return this.managementsService.findAllBrand();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.managementsService.findOne(+id);
+  @Get('brand/:brand_id')
+  findOneBrand(@Param('brand_id') brand_id: string) {
+    return this.managementsService.findOneBrand(+brand_id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateManagementDto: UpdateManagementDto) {
-    return this.managementsService.update(+id, updateManagementDto);
+  @Patch('brand/:brand_id')
+  updateBrand(
+    @Param('brand_id') brand_id: string,
+    @Body() updateBrandDto: UpdateBrandDto,
+  ) {
+    return this.managementsService.updateBrand(+brand_id, updateBrandDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.managementsService.remove(+id);
+  @Delete('brand/:brand_id')
+  removeBrand(@Param('brand_id') brand_id: string) {
+    return this.managementsService.removeBrand(+brand_id);
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateManagementDto } from './dto/create-management.dto';
+import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateManagementDto } from './dto/update-management.dto';
 
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Brand } from './entities/brand.entity';
 import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
+import { UpdateBrandDto } from './dto/update-brand.dto';
 
 @Injectable()
 export class ManagementsService {
@@ -19,23 +21,35 @@ export class ManagementsService {
     private productRepository: Repository<Product>,
   ) {}
 
-  create(createManagementDto: CreateManagementDto) {
-    return 'This action adds a new management';
+  async createBrand(createBrandDto: CreateBrandDto) {
+    const brand = this.brandRepository.create({
+      brand_name: createBrandDto.name,
+    });
+    return await this.brandRepository.save(brand);
   }
 
-  findAll() {
-    return `This action returns all managements`;
+  async findAllBrand() {
+    return await this.brandRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} management`;
+  async findOneBrand(brand_id: number) {
+    return await this.brandRepository.findOne({ where: { brand_id } });
   }
 
-  update(id: number, updateManagementDto: UpdateManagementDto) {
-    return `This action updates a #${id} management`;
+  async updateBrand(brand_id: number, updateBrandDto: UpdateBrandDto) {
+    const brand = await this.findOneBrand(brand_id);
+    if (!brand) {
+      throw new Error('Not found the brand');
+    }
+    Object.assign(brand, updateBrandDto);
+    return await this.brandRepository.save(brand);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} management`;
+  async removeBrand(brand_id: number) {
+    const brand = await this.findOneBrand(brand_id);
+    if (!brand) {
+      throw new Error('Not found the brand');
+    }
+    return await this.brandRepository.remove(brand);
   }
 }
