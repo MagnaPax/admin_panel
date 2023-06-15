@@ -20,6 +20,15 @@ export class CategoryService {
     return await this.categoryRepository.find();
   }
 
+  async search(searchCategoryName: string[]) {
+    return this.categoryRepository
+      .createQueryBuilder('category')
+      .where('category.category_name IN (:...searchCategoryName)', {
+        searchCategoryName,
+      })
+      .getMany();
+  }
+
   async findOne(category_id: number) {
     return await this.categoryRepository.findOne({ where: { category_id } });
   }
