@@ -32,7 +32,7 @@ $ docker-compose up -d
 $ npm install --save @nestjs/typeorm typeorm mysql2
 ```
 
-### 관리자 DB 만들기
+### 스키마 만들기 만들기
 
 ```sql
 CREATE SCHEMA management DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
@@ -41,7 +41,7 @@ CREATE SCHEMA management DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 ### 테이블 만들기
 
 ```sql
-CREATE TABLE brand (
+CREATE TABLE Brand (
 	brand_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '브랜드 식별자',
 	brand_name VARCHAR(255) NOT NULL DEFAULT '기본값' COMMENT '브랜드 이름'
 );
@@ -82,7 +82,7 @@ DB_HOST=localhost
 DB_PORT=13306
 DB_USERNAME=root
 DB_PASSWORD=root
-DB_DATABASE=test
+DB_DATABASE=management
 ```
 
 ./src/orm.config.ts
@@ -115,4 +115,14 @@ export function ormConfig(): TypeOrmModuleOptions {
     migrationsRun: commonConf.MIGRATIONS_RUN,
   };
 }
+```
+
+### app.module.ts에 ormConfig 추가
+
+```ts
+import { ormConfig } from './orm.config';
+@Module({
+  imports: [
+    TypeOrmModule.forRootAsync({ useFactory: ormConfig }),
+
 ```
