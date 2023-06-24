@@ -27,8 +27,12 @@ export class CategoryController {
   }
 
   @Get('search')
-  search(@Query('categoryName') searchCategoryName: string[]) {
-    return this.categoryService.search(searchCategoryName);
+  search(
+    @Query('categoryName') categoryName: string[],
+    @Query('product') product: boolean,
+    @Query('brand') brand: boolean,
+  ) {
+    return this.categoryService.search(categoryName, product, brand);
   }
 
   @Get(':id')

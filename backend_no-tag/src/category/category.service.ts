@@ -3,13 +3,19 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
+import { Brand } from 'src/brand/entities/brand.entity';
+import { Product } from 'src/product/entities/product.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class CategoryService {
   constructor(
+    @InjectRepository(Brand)
+    private brandRepository: Repository<Brand>,
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
@@ -20,13 +26,24 @@ export class CategoryService {
     return await this.categoryRepository.find();
   }
 
-  async search(searchCategoryName: string[]) {
-    return this.categoryRepository
-      .createQueryBuilder('category')
-      .where('category.category_name IN (:...searchCategoryName)', {
-        searchCategoryName,
-      })
-      .getMany();
+  async search(
+    categoryName: string[],
+    product: boolean,
+    brand: boolean,
+  ): Promise<any> {
+    let query = await this.categoryRepository.createQueryBuilder('category');
+
+    if (categoryName && categoryName.length > 0) {
+      query = query.where('category.category_name IN (:categoryName)', {
+        categoryName,
+      });
+    }
+
+    if (product) {
+      query = query.leftJoinAndSelect('category.products', 'product');
+    }
+
+    return query.getMany();
   }
 
   async findOne(category_id: number) {
