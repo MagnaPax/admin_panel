@@ -4,10 +4,10 @@ dotenv.config();
 
 export function ormConfig(): TypeOrmModuleOptions {
   const commonConf = {
-    SYNCHRONIZE: true,
+    SYNCHRONIZE: false,
     ENTITIES: ['dist/**/*.entity{.ts,.js}'],
     MIGRATIONS: [__dirname + '/migrations/**/*{.ts,.js}'],
-    MIGRATIONS_RUN: true,
+    MIGRATIONS_RUN: false,
   };
 
   return {
