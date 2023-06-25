@@ -7,7 +7,7 @@ import { Brand } from 'src/brand/entities/brand.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { Repository } from 'typeorm';
 import { Intermediate } from 'src/intermediate.entity';
-import { CreateIntermediateDto } from '../create-intermediate.dto';
+import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 
 @Injectable()
 export class CategoryService {
@@ -21,6 +21,10 @@ export class CategoryService {
     @InjectRepository(Intermediate)
     private intermediateRepository: Repository<Intermediate>,
   ) {}
+
+  // async add(createCategoryDto: CreateCategoryDto) {
+  //   return await this.categoryRepository.save(createCategoryDto);
+  // }
 
   async add(createCategoryDto: CreateCategoryDto): Promise<Category> {
     // 카테고리 추가

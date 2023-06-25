@@ -4,20 +4,28 @@ import { UpdateBrandDto } from './dto/update-brand.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brand } from './entities/brand.entity';
 import { Repository } from 'typeorm';
+import { Intermediate } from 'src/intermediate.entity';
+import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 
 @Injectable()
 export class BrandService {
   constructor(
     @InjectRepository(Brand)
     private brandRepository: Repository<Brand>,
+    @InjectRepository(Intermediate)
+    private intermediateRepository: Repository<Intermediate>,
   ) {}
 
-  async create(createBrandDto: CreateBrandDto) {
-    // const brand = this.brandRepository.create({
-    //   brand_name: createBrandDto.name,
-    // });
-    // return await this.brandRepository.save(brand);
-    return await this.brandRepository.save(createBrandDto);
+  async add(createBrandDto: CreateBrandDto) {
+    const brand = await this.brandRepository.save(createBrandDto);
+
+    // 중간 테이블 업데이트
+    const createIntermediateDto: CreateIntermediateDto = {
+      brand_id: brand.brand_id,
+    };
+    await this.intermediateRepository.save(createIntermediateDto);
+
+    return brand;
   }
 
   async findAll() {
