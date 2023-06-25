@@ -180,4 +180,44 @@ yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/vue,vuejs,visualstudiocode,node
 
+# NodeJS
+
+# compiled output
+/backend_notag/dist
+/backend_notag/node_modules
+
+# Logs
+/backend_notag/logs
+/backend_notag/*.log
+/backend_notag/npm-debug.log*
+/backend_notag/pnpm-debug.log*
+/backend_notag/yarn-debug.log*
+/backend_notag/yarn-error.log*
+/backend_notag/lerna-debug.log*
+
+# OS
+/backend_notag/.DS_Store
+
+# Tests
+/backend_notag/coverage
+/backend_notag/.nyc_output
+
+# IDEs and editors
+/backend_notag/.idea
+/backend_notag/.project
+/backend_notag/.classpath
+/backend_notag/.c9/
+/backend_notag/*.launch
+/backend_notag/.settings/
+/backend_notag/*.sublime-workspace
+
+# IDE - VSCode
+/backend_notag/.vscode/*
+/backend_notag/!.vscode/settings.json
+/backend_notag/!.vscode/tasks.json
+/backend_notag/!.vscode/launch.json
+/backend_notag/!.vscode/extensions.json
+
 문제.md
+
+.env
