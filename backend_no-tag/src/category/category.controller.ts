@@ -17,8 +17,8 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  add(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.add(createCategoryDto);
   }
 
   @Get()
@@ -32,7 +32,7 @@ export class CategoryController {
     @Query('product') product: boolean,
     @Query('brand') brand: boolean,
   ) {
-    return this.categoryService.search(categoryName, product, brand);
+    return this.categoryService.lookUp(categoryName, product, brand);
   }
 
   @Get(':id')
