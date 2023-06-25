@@ -26,13 +26,7 @@ services:
 $ docker-compose up -d
 ```
 
-### TypeORM 관련 패키지를 설치
-
-```
-$ npm install --save @nestjs/typeorm typeorm mysql2
-```
-
-### 스키마 만들기 만들기
+### 스키마 만들기
 
 ```sql
 CREATE SCHEMA management DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
@@ -66,14 +60,21 @@ CREATE TABLE Product (
   FOREIGN KEY (brand_id) REFERENCES Brand (brand_id),
   FOREIGN KEY (category_id) REFERENCES Category (category_id)
 );
-
 ```
 
-### 환경설정 파일 만들기
+- 브랜드 <-> 카테고리 중간 테이블 만들기
 
-```terminal
-$ npm install dotenv
+```sql
+CREATE TABLE Intermediate (
+  intermediate_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '고유 식별자',
+  brand_id INT,
+  category_id INT,
+  FOREIGN KEY (brand_id) REFERENCES Brand (brand_id),
+  FOREIGN KEY (category_id) REFERENCES Category (category_id)
+);
 ```
+
+### 환경설정
 
 ./.env
 
@@ -83,46 +84,4 @@ DB_PORT=13306
 DB_USERNAME=root
 DB_PASSWORD=root
 DB_DATABASE=management
-```
-
-./src/orm.config.ts
-
-```ts
-import { TypeOrmModuleOptions } from "@nestjs/typeorm";
-import * as dotenv from "dotenv";
-dotenv.config();
-
-export function ormConfig(): TypeOrmModuleOptions {
-  const commonConf = {
-    SYNCHRONIZE: false,
-    ENTITIES: ["dist/**/*.entity{.ts,.js}"],
-    MIGRATIONS: [__dirname + "/migrations/**/*{.ts,.js}"],
-    MIGRATIONS_RUN: false,
-  };
-
-  return {
-    name: "default",
-    type: "mysql",
-    database: process.env.DB_DATABASE,
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    logging: true,
-    synchronize: commonConf.SYNCHRONIZE,
-    entities: commonConf.ENTITIES,
-    migrations: commonConf.MIGRATIONS,
-    migrationsRun: commonConf.MIGRATIONS_RUN,
-  };
-}
-```
-
-### app.module.ts에 ormConfig 추가
-
-```ts
-import { ormConfig } from './orm.config';
-@Module({
-  imports: [
-    TypeOrmModule.forRootAsync({ useFactory: ormConfig }),
-
 ```
