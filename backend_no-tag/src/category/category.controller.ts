@@ -17,8 +17,8 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  add(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.add(createCategoryDto);
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.create(createCategoryDto);
   }
 
   @Get()

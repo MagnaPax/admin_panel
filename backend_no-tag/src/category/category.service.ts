@@ -22,11 +22,7 @@ export class CategoryService {
     private intermediateRepository: Repository<Intermediate>,
   ) {}
 
-  // async add(createCategoryDto: CreateCategoryDto) {
-  //   return await this.categoryRepository.save(createCategoryDto);
-  // }
-
-  async add(createCategoryDto: CreateCategoryDto): Promise<Category> {
+  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     // 카테고리 추가
     const category = await this.categoryRepository.save(createCategoryDto);
 

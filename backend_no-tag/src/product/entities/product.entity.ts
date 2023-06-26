@@ -23,6 +23,12 @@ export class Product {
   sex: string;
 
   @Column()
+  brand_id: number;
+
+  @Column()
+  category_id: number;
+
+  @Column()
   is_kids: boolean;
 
   @Column()
