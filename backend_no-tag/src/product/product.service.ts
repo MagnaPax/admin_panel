@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Intermediate } from 'src/intermediate.entity';
 import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 
@@ -16,15 +16,28 @@ export class ProductService {
     private intermediateRepository: Repository<Intermediate>,
   ) {}
 
-  async create(createProductDto: CreateProductDto) {
-    return await this.productRepository.save(createProductDto);
-  }
-
   findCommonNumbers(arrA: number[], arrB: number[]): number[] {
     return arrA.filter((number) => arrB.includes(number));
   }
 
-  async findIn(brand_id: number, category_id: number) {
+  private mergeRecords(records: Intermediate[]): Intermediate {
+    return records.reduce((updatedRecord, record) => {
+      if (record.category_id !== null) {
+        updatedRecord.category_id = record.category_id;
+      }
+
+      if (record.brand_id !== null) {
+        updatedRecord.brand_id = record.brand_id;
+      }
+
+      return updatedRecord;
+    }, new Intermediate());
+  }
+
+  async updateIntermediate(
+    brand_id: number,
+    category_id: number,
+  ): Promise<void> {
     const query = await this.intermediateRepository
       .createQueryBuilder('intermediate')
       .select('intermediate.intermediate_id');
@@ -50,31 +63,39 @@ export class ProductService {
       intermediateIdsOfCategory,
     );
 
-    if (commonIDs.length !== 0) {
-      console.log(
-        '중간테이블에 기존에 있던 것. intermediate 건드릴 필요 없음. 그런데 같은게 여러개 나올 수도 있나???',
-      );
-    } else {
-      console.log('새로 추가된 것');
-    }
+    // 기존에 있던 상품. Intermediate 테이블 건드릴 필요 없음
+    if (commonIDs.length !== 0) return;
 
-    return [1111111111];
+    // 새로 추가된 상품. Intermediate 테이블 업데이트 해야 됨
+    const recordsToMerge = await this.intermediateRepository.find({
+      where: [
+        { intermediate_id: In(intermediateIdsOfBrand) },
+        { intermediate_id: In(intermediateIdsOfCategory) },
+      ],
+    });
+
+    const updatedRecord = this.mergeRecords(recordsToMerge);
+
+    await this.intermediateRepository.save(updatedRecord);
+
+    await this.intermediateRepository.delete({
+      intermediate_id: In([
+        ...intermediateIdsOfBrand,
+        ...intermediateIdsOfCategory,
+      ]),
+    });
+
+    return;
   }
 
-  async add(createProductDto: CreateProductDto) {
-    const commonIDs = await this.findIn(
+  async create(createProductDto: CreateProductDto) {
+    // 중간 테이블 업데이트
+    await this.updateIntermediate(
       createProductDto.brand_id,
       createProductDto.category_id,
     );
 
-    // 중간 테이블 업데이트
-    const createIntermediateDto: CreateIntermediateDto = {
-      // brand_id: brand.brand_id,
-    };
-    await this.intermediateRepository.save(createIntermediateDto);
-
-    const product = await this.productRepository.save(createProductDto);
-    return product;
+    return await this.productRepository.save(createProductDto);
   }
 
   async findAll() {
