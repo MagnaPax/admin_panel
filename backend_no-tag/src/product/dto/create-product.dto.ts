@@ -1,5 +1,5 @@
 import {
-  IsNotEmpty,
+  IsDefined,
   IsNumber,
   IsString,
   IsBoolean,
@@ -7,22 +7,27 @@ import {
 } from 'class-validator';
 
 export class CreateProductDto {
-  @IsNotEmpty()
+  @IsDefined()
   @IsString()
   product_name: string;
 
+  @IsDefined()
   @IsNumber()
   brand_id: number;
 
+  @IsDefined()
   @IsNumber()
   category_id: number;
 
+  @IsDefined()
   @IsString()
   sex: string;
 
+  @IsDefined()
   @IsBoolean()
   is_kids: boolean;
 
+  @IsDefined()
   @IsNumber()
   @IsPositive()
   sales_quantity: number;
