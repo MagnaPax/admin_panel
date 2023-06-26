@@ -16,7 +16,7 @@ export class BrandService {
     private intermediateRepository: Repository<Intermediate>,
   ) {}
 
-  async add(createBrandDto: CreateBrandDto) {
+  async create(createBrandDto: CreateBrandDto) {
     const brand = await this.brandRepository.save(createBrandDto);
 
     // 중간 테이블 업데이트
