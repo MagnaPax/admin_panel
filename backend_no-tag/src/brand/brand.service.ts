@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Brand } from './entities/brand.entity';
-import { Repository } from 'typeorm';
-import { Intermediate } from 'src/intermediate.entity';
 import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+
+import { Brand } from './entities/brand.entity';
+import { Intermediate } from 'src/intermediate.entity';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class BrandService {
@@ -14,6 +17,8 @@ export class BrandService {
     private brandRepository: Repository<Brand>,
     @InjectRepository(Intermediate)
     private intermediateRepository: Repository<Intermediate>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
   ) {}
 
   async create(createBrandDto: CreateBrandDto) {
