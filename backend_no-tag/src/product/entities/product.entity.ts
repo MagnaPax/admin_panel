@@ -4,11 +4,7 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  ManyToMany,
-  JoinTable,
 } from 'typeorm';
-import { Brand } from '../../brand/entities/brand.entity';
-import { Category } from '../../category/entities/category.entity';
 import { Intermediate } from 'src/intermediate.entity';
 
 @Entity()
@@ -34,8 +30,14 @@ export class Product {
   @Column()
   sales_quantity: number;
 
-  // 브랜드카테고리에 join 됨
-  @ManyToMany(() => Intermediate)
-  @JoinTable()
-  intermediates: Intermediate[];
+  @ManyToOne(() => Intermediate, (intermediate) => intermediate.brandProducts)
+  @JoinColumn({ name: 'brand_id', referencedColumnName: 'brand_id' })
+  intermediate_brand: Intermediate;
+
+  @ManyToOne(
+    () => Intermediate,
+    (intermediate) => intermediate.categoryProducts,
+  )
+  @JoinColumn({ name: 'category_id', referencedColumnName: 'category_id' })
+  intermediate_category: Intermediate;
 }

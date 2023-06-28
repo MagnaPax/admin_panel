@@ -5,6 +5,8 @@ import {
   JoinColumn,
   ManyToMany,
   PrimaryGeneratedColumn,
+  JoinTable,
+  OneToMany,
 } from 'typeorm';
 import { Category } from './category/entities/category.entity';
 import { Brand } from './brand/entities/brand.entity';
@@ -31,7 +33,10 @@ export class Intermediate {
   @JoinColumn({ name: 'brand_id' }) // 외래 키 칼럼 지정
   brand: Brand;
 
-  // 프로덕트를 join. intermediate TO product
-  @ManyToMany(() => Product, (product) => product.intermediates)
-  products: Product[];
+  // Product 테이블을 left join. Intermediate TO Product
+  @OneToMany(() => Product, (product) => product.intermediate_brand)
+  brandProducts: Product[];
+
+  @OneToMany(() => Product, (product) => product.intermediate_category)
+  categoryProducts: Product[];
 }
