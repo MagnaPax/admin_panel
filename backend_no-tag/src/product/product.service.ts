@@ -4,12 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 
 import { Product } from './entities/product.entity';
 import { Intermediate } from 'src/intermediate.entity';
-import { Brand } from 'src/brand/entities/brand.entity';
-import { Category } from 'src/category/entities/category.entity';
 
 import { BrandService } from 'src/brand/brand.service';
 import { CategoryService } from 'src/category/category.service';
