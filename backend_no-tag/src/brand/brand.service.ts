@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Query } from 'src/queryHelper';
 
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
@@ -51,10 +52,33 @@ export class BrandService {
   }
 
   async remove(brand_id: number) {
-    const brand = await this.findOne(brand_id);
-    if (!brand) {
-      throw new Error('Not found the brand');
-    }
-    return await this.brandRepository.remove(brand);
+    const query = new Query();
+
+    const brands = await query.findRecords(
+      brand_id,
+      'brand',
+      'brand_id',
+      this.brandRepository,
+    );
+
+    if (!brands) throw new Error('Not found the brand');
+
+    // Intermediate 엔티티 수정
+    await this.intermediateRepository
+      .createQueryBuilder()
+      .update(Intermediate)
+      .set({ brand_id: null })
+      .where('brand_id = :brandId', { brandId: brand_id })
+      .execute();
+
+    // Product 엔티티 수정
+    await this.productRepository
+      .createQueryBuilder()
+      .update(Product)
+      .set({ brand_id: null })
+      .where('brand_id = :brandId', { brandId: brand_id })
+      .execute();
+
+    return await this.brandRepository.remove(brands);
   }
 }
