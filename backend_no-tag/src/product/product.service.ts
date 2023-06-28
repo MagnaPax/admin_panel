@@ -115,8 +115,20 @@ export class ProductService {
     return await this.productRepository.findOne({ where: { product_id } });
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(product_id: number, updateProductDto: UpdateProductDto) {
+    const brand = await this.brandService.findOne(updateProductDto.brand_id);
+    const category = await this.categoryService.findOne(
+      updateProductDto.category_id,
+    );
+    const product = await this.findOne(product_id);
+
+    if (!brand || !category || !product) {
+      throw new Error('Not found one of IDs');
+    }
+
+    // DB에 덮어쓰기
+    Object.assign(product, updateProductDto);
+    return await this.productRepository.save(product);
   }
 
   remove(id: number) {
