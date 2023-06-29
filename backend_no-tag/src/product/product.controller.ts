@@ -10,6 +10,7 @@ import {
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { RemoveProductDto } from './dto/remove-product.dto';
 
 @Controller('product')
 export class ProductController {
@@ -35,8 +36,8 @@ export class ProductController {
     return this.productService.update(+id, updateProductDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+  @Delete()
+  remove(@Body() removeProductDto: RemoveProductDto) {
+    return this.productService.remove(removeProductDto);
   }
 }
