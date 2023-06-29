@@ -54,10 +54,9 @@ export class BrandService {
   async remove(brand_id: number) {
     const query = new Query();
 
-    const brands = await query.findRecords(
-      brand_id,
-      'brand',
-      'brand_id',
+    const brands = await query.findRecordsByValues(
+      [`${brand_id}`],
+      ['brand_id'],
       this.brandRepository,
     );
 
@@ -78,6 +77,15 @@ export class BrandService {
       .set({ brand_id: null })
       .where('brand_id = :brandId', { brandId: brand_id })
       .execute();
+
+    // 값이 하나도 없는 중간 테이블 삭제
+    const areEmpties = await query.findRecordsByValues(
+      [null, null],
+      ['brand_id', 'category_id'],
+      this.intermediateRepository,
+    );
+
+    if (areEmpties) await this.intermediateRepository.remove(areEmpties);
 
     return await this.brandRepository.remove(brands);
   }
