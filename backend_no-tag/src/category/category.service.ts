@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Query } from 'src/queryHelper';
+
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+
 import { Category } from './entities/category.entity';
 import { Brand } from 'src/brand/entities/brand.entity';
 import { Product } from 'src/product/entities/product.entity';
-import { Repository } from 'typeorm';
 import { Intermediate } from 'src/intermediate.entity';
-import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 
 @Injectable()
 export class CategoryService {
@@ -77,10 +80,41 @@ export class CategoryService {
   }
 
   async remove(category_id: number) {
-    const category = await this.findOne(category_id);
-    if (!category) {
-      throw new Error('Not found the category');
-    }
-    return await this.categoryRepository.remove(category);
+    const query = new Query();
+
+    const categories = await query.findRecordsByValues(
+      [`${category_id}`],
+      ['category_id'],
+      this.categoryRepository,
+    );
+
+    if (!categories) throw new Error('Not found the category');
+
+    // Intermediate 엔티티 수정
+    await this.intermediateRepository
+      .createQueryBuilder()
+      .update(Intermediate)
+      .set({ category_id: null })
+      .where('category_id = :CategoryID', { CategoryID: category_id })
+      .execute();
+
+    // Product 엔티티 수정
+    await this.productRepository
+      .createQueryBuilder()
+      .update(Product)
+      .set({ category_id: null })
+      .where('category_id = :CategoryID', { CategoryID: category_id })
+      .execute();
+
+    // 값이 하나도 없는 중간 테이블 삭제
+    const areEmpties = await query.findRecordsByValues(
+      [null, null],
+      ['brand_id', 'category_id'],
+      this.intermediateRepository,
+    );
+
+    if (areEmpties) await this.intermediateRepository.remove(areEmpties);
+
+    return await this.categoryRepository.remove(categories);
   }
 }
