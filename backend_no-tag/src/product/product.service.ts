@@ -1,21 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Query } from 'src/queryHelper';
 
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+import { RemoveProductDto } from './dto/remove-product.dto';
 
 import { Product } from './entities/product.entity';
 import { Intermediate } from 'src/intermediate.entity';
-import { Brand } from 'src/brand/entities/brand.entity';
-import { Category } from 'src/category/entities/category.entity';
 
 import { BrandService } from 'src/brand/brand.service';
 import { CategoryService } from 'src/category/category.service';
 
 @Injectable()
 export class ProductService {
+  private query = new Query();
+
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
@@ -117,10 +118,10 @@ export class ProductService {
 
   async update(product_id: number, updateProductDto: UpdateProductDto) {
     const brand = await this.brandService.findOne(updateProductDto.brand_id);
+    const product = await this.findOne(product_id);
     const category = await this.categoryService.findOne(
       updateProductDto.category_id,
     );
-    const product = await this.findOne(product_id);
 
     if (!brand || !category || !product) {
       throw new Error('Not found one of IDs');
@@ -131,7 +132,21 @@ export class ProductService {
     return await this.productRepository.save(product);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(removeProductDto: RemoveProductDto) {
+    // null 값이 아닌 키, 밸류 얻기
+    const nonNullValues = Object.entries(removeProductDto)
+      .filter(([key, value]) => value !== null)
+      .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+
+    const keys = Object.keys(nonNullValues);
+    const values = Object.values(nonNullValues);
+
+    const products = await this.query.findRecordsByValues(
+      values,
+      keys,
+      this.productRepository,
+    );
+
+    return await this.productRepository.remove(products);
   }
 }

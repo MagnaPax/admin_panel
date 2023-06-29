@@ -18,7 +18,7 @@ export class Brand {
   @Column()
   brand_name: string;
 
-  // 중간테이블을 left join. brand TO brand-category
+  // 중간테이블을 left join. Brand TO Intermediate
   @OneToMany(() => Intermediate, (intermediate) => intermediate.brand)
   intermediates: Intermediate[];
 }

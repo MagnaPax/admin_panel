@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Query } from 'src/queryHelper';
+
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Brand } from './entities/brand.entity';
-import { Repository } from 'typeorm';
-import { Intermediate } from 'src/intermediate.entity';
 import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+
+import { Brand } from './entities/brand.entity';
+import { Intermediate } from 'src/intermediate.entity';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class BrandService {
@@ -14,6 +18,8 @@ export class BrandService {
     private brandRepository: Repository<Brand>,
     @InjectRepository(Intermediate)
     private intermediateRepository: Repository<Intermediate>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
   ) {}
 
   async create(createBrandDto: CreateBrandDto) {
@@ -46,10 +52,41 @@ export class BrandService {
   }
 
   async remove(brand_id: number) {
-    const brand = await this.findOne(brand_id);
-    if (!brand) {
-      throw new Error('Not found the brand');
-    }
-    return await this.brandRepository.remove(brand);
+    const query = new Query();
+
+    const brands = await query.findRecordsByValues(
+      [`${brand_id}`],
+      ['brand_id'],
+      this.brandRepository,
+    );
+
+    if (!brands) throw new Error('Not found the brand');
+
+    // Intermediate 엔티티 수정
+    await this.intermediateRepository
+      .createQueryBuilder()
+      .update(Intermediate)
+      .set({ brand_id: null })
+      .where('brand_id = :brandId', { brandId: brand_id })
+      .execute();
+
+    // Product 엔티티 수정
+    await this.productRepository
+      .createQueryBuilder()
+      .update(Product)
+      .set({ brand_id: null })
+      .where('brand_id = :brandId', { brandId: brand_id })
+      .execute();
+
+    // 값이 하나도 없는 중간 테이블 삭제
+    const areEmpties = await query.findRecordsByValues(
+      [null, null],
+      ['brand_id', 'category_id'],
+      this.intermediateRepository,
+    );
+
+    if (areEmpties) await this.intermediateRepository.remove(areEmpties);
+
+    return await this.brandRepository.remove(brands);
   }
 }
