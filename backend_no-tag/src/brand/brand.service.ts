@@ -13,6 +13,8 @@ import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class BrandService {
+  private query = new Query();
+
   constructor(
     @InjectRepository(Brand)
     private brandRepository: Repository<Brand>,
@@ -23,6 +25,14 @@ export class BrandService {
   ) {}
 
   async create(createBrandDto: CreateBrandDto) {
+    // 입력이 중복되지 않게
+    const isDuplicated = await this.query.findRecordsByValues(
+      [`${createBrandDto.brand_name}`],
+      ['brand_name'],
+      this.brandRepository,
+    );
+    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
+
     const brand = await this.brandRepository.save(createBrandDto);
 
     // 중간 테이블 업데이트
@@ -52,9 +62,7 @@ export class BrandService {
   }
 
   async remove(brand_id: number) {
-    const query = new Query();
-
-    const brands = await query.findRecordsByValues(
+    const brands = await this.query.findRecordsByValues(
       [`${brand_id}`],
       ['brand_id'],
       this.brandRepository,
@@ -79,7 +87,7 @@ export class BrandService {
       .execute();
 
     // 값이 하나도 없는 중간 테이블 삭제
-    const areEmpties = await query.findRecordsByValues(
+    const areEmpties = await this.query.findRecordsByValues(
       [null, null],
       ['brand_id', 'category_id'],
       this.intermediateRepository,
