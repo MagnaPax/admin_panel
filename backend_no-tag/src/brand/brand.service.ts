@@ -25,7 +25,7 @@ export class BrandService {
   ) {}
 
   async create(createBrandDto: CreateBrandDto) {
-    // 입력이 중복되지 않게
+    // 같은 이름이 중복되지 않게
     const isDuplicated = await this.query.findRecordsByValues(
       [`${createBrandDto.brand_name}`],
       ['brand_name'],
@@ -35,11 +35,12 @@ export class BrandService {
 
     const brand = await this.brandRepository.save(createBrandDto);
 
-    // 중간 테이블 업데이트
-    const createIntermediateDto: CreateIntermediateDto = {
+    // 중간 테이블에 업데이트
+    const intermediate: CreateIntermediateDto = {
       brand_id: brand.brand_id,
+      category_id: createBrandDto.category_id,
     };
-    await this.intermediateRepository.save(createIntermediateDto);
+    await this.intermediateRepository.save(intermediate);
 
     return brand;
   }
