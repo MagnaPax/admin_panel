@@ -13,6 +13,8 @@ import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class BrandService {
+  private query = new Query();
+
   constructor(
     @InjectRepository(Brand)
     private brandRepository: Repository<Brand>,
@@ -22,16 +24,49 @@ export class BrandService {
     private productRepository: Repository<Product>,
   ) {}
 
-  async create(createBrandDto: CreateBrandDto) {
-    const brand = await this.brandRepository.save(createBrandDto);
+  async create(createBrandDto: CreateBrandDto): Promise<Brand> {
+    // 브랜드 이름이 중복되지 않게
+    const isDuplicated = await this.query.findRecordsByValues(
+      [`${createBrandDto.brand_name}`],
+      ['brand_name'],
+      this.brandRepository,
+    );
+    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
 
-    // 중간 테이블 업데이트
-    const createIntermediateDto: CreateIntermediateDto = {
-      brand_id: brand.brand_id,
+    // 브랜드 추가
+    const newBrand = await this.brandRepository.save(createBrandDto);
+
+    // 중간 테이블에 추가
+    const intermediate: CreateIntermediateDto = {
+      brand_id: newBrand.brand_id,
+      category_id: createBrandDto.category_id,
     };
-    await this.intermediateRepository.save(createIntermediateDto);
+    await this.intermediateRepository.save(intermediate);
 
-    return brand;
+    // 중간 테이블에서 중복되는 brand_id들 정리
+    if (
+      createBrandDto.category_id !== null &&
+      createBrandDto.category_id !== undefined
+    ) {
+      const sameCategories = await this.query.findRecordsByValues(
+        [`${newBrand.category_id}`],
+        ['category_id'],
+        this.intermediateRepository,
+      );
+
+      // 중간 테이블에 지금 입력한 category_id와 값을 가진 레코드가 있다면 null로 바꾼 뒤 삭제
+      if (sameCategories.length > 1) {
+        const nullRecords = sameCategories.filter((el) => el.brand_id === null);
+
+        for (const el of nullRecords) {
+          el.category_id = null;
+          await this.intermediateRepository.save(el);
+        }
+        await this.intermediateRepository.remove(nullRecords);
+      }
+    }
+
+    return newBrand;
   }
 
   async findAll() {
@@ -52,9 +87,7 @@ export class BrandService {
   }
 
   async remove(brand_id: number) {
-    const query = new Query();
-
-    const brands = await query.findRecordsByValues(
+    const brands = await this.query.findRecordsByValues(
       [`${brand_id}`],
       ['brand_id'],
       this.brandRepository,
@@ -79,7 +112,7 @@ export class BrandService {
       .execute();
 
     // 값이 하나도 없는 중간 테이블 삭제
-    const areEmpties = await query.findRecordsByValues(
+    const areEmpties = await this.query.findRecordsByValues(
       [null, null],
       ['brand_id', 'category_id'],
       this.intermediateRepository,

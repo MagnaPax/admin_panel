@@ -14,6 +14,8 @@ import { Intermediate } from 'src/intermediate.entity';
 
 @Injectable()
 export class CategoryService {
+  private query = new Query();
+
   constructor(
     @InjectRepository(Brand)
     private brandRepository: Repository<Brand>,
@@ -26,16 +28,48 @@ export class CategoryService {
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+    // 카테고리 이름이 중복되지 않게
+    const isDuplicated = await this.query.findRecordsByValues(
+      [`${createCategoryDto.category_name}`],
+      ['category_name'],
+      this.categoryRepository,
+    );
+    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
+
     // 카테고리 추가
-    const category = await this.categoryRepository.save(createCategoryDto);
+    const newCategory = await this.categoryRepository.save(createCategoryDto);
 
-    // 중간 테이블 업데이트
-    const createIntermediateDto: CreateIntermediateDto = {
-      category_id: category.category_id,
+    // 중간 테이블에 추가
+    const intermediate: CreateIntermediateDto = {
+      category_id: newCategory.category_id,
+      brand_id: createCategoryDto.brand_id,
     };
-    await this.intermediateRepository.save(createIntermediateDto);
+    await this.intermediateRepository.save(intermediate);
 
-    return category;
+    // 중간 테이블에서 중복되는 category_id들 정리
+    if (
+      createCategoryDto.brand_id !== null &&
+      createCategoryDto.brand_id !== undefined
+    ) {
+      const sameBrands = await this.query.findRecordsByValues(
+        [`${newCategory.brand_id}`],
+        ['brand_id'],
+        this.intermediateRepository,
+      );
+
+      // 중간 테이블에 지금 입력한 것 외에도 같은 brand_id 값을 가진 레코드가 있을 때
+      if (sameBrands.length > 1) {
+        const nullRecords = sameBrands.filter((el) => el.category_id === null);
+
+        for (const el of nullRecords) {
+          el.brand_id = null;
+          await this.intermediateRepository.save(el);
+        }
+        await this.intermediateRepository.remove(nullRecords);
+      }
+    }
+
+    return newCategory;
   }
 
   async findAll() {
@@ -80,14 +114,11 @@ export class CategoryService {
   }
 
   async remove(category_id: number) {
-    const query = new Query();
-
-    const categories = await query.findRecordsByValues(
+    const categories = await this.query.findRecordsByValues(
       [`${category_id}`],
       ['category_id'],
       this.categoryRepository,
     );
-
     if (!categories) throw new Error('Not found the category');
 
     // Intermediate 엔티티 수정
@@ -106,8 +137,8 @@ export class CategoryService {
       .where('category_id = :CategoryID', { CategoryID: category_id })
       .execute();
 
-    // 값이 하나도 없는 중간 테이블 삭제
-    const areEmpties = await query.findRecordsByValues(
+    // 값이 하나도 없는 중간 테이블의 레코드들 삭제
+    const areEmpties = await this.query.findRecordsByValues(
       [null, null],
       ['brand_id', 'category_id'],
       this.intermediateRepository,

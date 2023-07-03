@@ -3,9 +3,7 @@ import {
   ManyToOne,
   Column,
   JoinColumn,
-  ManyToMany,
   PrimaryGeneratedColumn,
-  JoinTable,
   OneToMany,
 } from 'typeorm';
 import { Category } from './category/entities/category.entity';
