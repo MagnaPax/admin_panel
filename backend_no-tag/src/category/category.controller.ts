@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -16,11 +17,6 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
-  }
-
   @Get()
   findAll() {
     return this.categoryService.findAll();
@@ -28,16 +24,21 @@ export class CategoryController {
 
   @Get('search')
   search(
-    @Query('categoryName') categoryName: string[],
-    @Query('product') product: boolean,
-    @Query('brand') brand: boolean,
+    @Query('category_name') categoryNames: string[],
+    @Query('product', ParseBoolPipe) product: boolean,
+    @Query('brand', ParseBoolPipe) brand: boolean,
   ) {
-    return this.categoryService.lookUp(categoryName, product, brand);
+    return this.categoryService.lookUp(categoryNames, product, brand);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(+id);
+  }
+
+  @Post()
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.create(createCategoryDto);
   }
 
   @Patch(':id')

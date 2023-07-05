@@ -27,6 +27,26 @@ export class Query {
     return await queryBuilder.getMany();
   }
 
+  async findRecordsByValues2(
+    values: any[],
+    columnNames: string[],
+    repository: Repository<any>,
+  ): Promise<any[]> {
+    const queryBuilder = repository.createQueryBuilder();
+    const tableName = repository.metadata.name;
+
+    columnNames.forEach((columnName, index) => {
+      if (values[index] === null) {
+        queryBuilder.andWhere(`${tableName}.${columnName} IS NULL`);
+      } else {
+        queryBuilder.andWhere(`${tableName}.${columnName} = :value${index}`, {
+          [`value${index}`]: values[index],
+        });
+      }
+    });
+    return await queryBuilder.getMany();
+  }
+
   async updateRecords(
     records: any[],
     updateProps: Record<string, any>,
