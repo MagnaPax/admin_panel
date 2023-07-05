@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
@@ -23,6 +25,14 @@ export class BrandController {
   @Get()
   findAll() {
     return this.brandService.findAll();
+  }
+  @Get('search')
+  search(
+    @Query('brand_name') brandNames: string[],
+    @Query('category', ParseBoolPipe) category: boolean,
+    @Query('product', ParseBoolPipe) product: boolean,
+  ) {
+    return this.brandService.lookUp(brandNames, category, product);
   }
 
   @Get(':id')
