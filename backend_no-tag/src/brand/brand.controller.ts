@@ -6,10 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
+import { SearchBrandDto } from './dto/search-brand.dto';
 
 @Controller('brand')
 export class BrandController {
@@ -25,9 +28,14 @@ export class BrandController {
     return this.brandService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.brandService.findOne(+id);
+  @Get('search')
+  search(@Query() query: SearchBrandDto) {
+    return this.brandService.lookUp(query);
+  }
+
+  @Get(':ids')
+  findSome(@Param('ids', ParseArrayPipe) ids: number[]) {
+    return this.brandService.findSome(ids);
   }
 
   @Patch(':id')

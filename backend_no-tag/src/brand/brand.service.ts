@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Query } from 'src/queryHelper';
 
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+import { SearchBrandDto } from './dto/search-brand.dto';
 
 import { Brand } from './entities/brand.entity';
+import { Category } from 'src/category/entities/category.entity';
 import { Intermediate } from 'src/intermediate.entity';
 import { Product } from 'src/product/entities/product.entity';
 
@@ -18,6 +20,8 @@ export class BrandService {
   constructor(
     @InjectRepository(Brand)
     private brandRepository: Repository<Brand>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
     @InjectRepository(Intermediate)
     private intermediateRepository: Repository<Intermediate>,
     @InjectRepository(Product)
@@ -71,6 +75,69 @@ export class BrandService {
 
   async findAll() {
     return await this.brandRepository.find();
+  }
+
+  async lookUp(queries: SearchBrandDto): Promise<any> {
+    let results: any[];
+    const isCategory = queries.category;
+    const isProduct = queries.product;
+    const brandNames = queries.brand_name;
+
+    const columnNames = Array(brandNames.length).fill('brand_name');
+
+    const brands = await this.query.findRecordsByValues(
+      brandNames,
+      columnNames,
+      this.brandRepository,
+    );
+
+    results = brands;
+
+    // 브랜드 -> 중간테이블
+    if (isProduct || isCategory) {
+      const brandIds = brands.map((brand) => brand.brand_id);
+      const brandColumnNames = Array(brandIds.length).fill('brand_id');
+
+      const intermediates = await this.query.findRecordsByValues(
+        brandIds,
+        brandColumnNames,
+        this.intermediateRepository,
+      );
+
+      const categoryIds = intermediates.map(
+        (intermediate) => intermediate.category_id,
+      );
+
+      const categoryColumnNames = Array(categoryIds.length).fill('category_id');
+
+      // 중간테이블 -> 카테고리
+      if (isCategory) {
+        const categories = await this.query.findRecordsByValues(
+          categoryIds,
+          categoryColumnNames,
+          this.categoryRepository,
+        );
+
+        results = categories;
+      }
+
+      // 브랜드 -> 중간테이블 -> 프로덕트
+      if (isProduct) {
+        const products = await this.productRepository
+          .createQueryBuilder('product')
+          .where('product.brand_id IN (:...brandIds)', { brandIds })
+          .andWhere('product.category_id IN (:...categoryIds)', { categoryIds })
+          .getMany();
+
+        results = products;
+      }
+    }
+
+    return results;
+  }
+
+  async findSome(ids: number[]) {
+    return await this.brandRepository.find({ where: { brand_id: In(ids) } });
   }
 
   async findOne(brand_id: number) {
