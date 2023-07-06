@@ -7,11 +7,11 @@ import {
   Param,
   Delete,
   Query,
-  ParseBoolPipe,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { SearchCategoryDto } from './dto/search-category.dto';
 
 @Controller('category')
 export class CategoryController {
@@ -23,12 +23,8 @@ export class CategoryController {
   }
 
   @Get('search')
-  search(
-    @Query('category_name') categoryNames: string[],
-    @Query('product', ParseBoolPipe) product: boolean,
-    @Query('brand', ParseBoolPipe) brand: boolean,
-  ) {
-    return this.categoryService.lookUp(categoryNames, product, brand);
+  search(@Query() query: SearchCategoryDto) {
+    return this.categoryService.lookUp(query);
   }
 
   @Get(':id')

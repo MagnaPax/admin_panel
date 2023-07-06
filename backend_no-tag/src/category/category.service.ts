@@ -6,6 +6,7 @@ import { Query } from 'src/queryHelper';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+import { SearchCategoryDto } from './dto/search-category.dto';
 
 import { Category } from './entities/category.entity';
 import { Brand } from 'src/brand/entities/brand.entity';
@@ -76,14 +77,11 @@ export class CategoryService {
     return await this.categoryRepository.find();
   }
 
-  async lookUp(
-    categoryNames: string[],
-    product: boolean,
-    brand: boolean,
-  ): Promise<any> {
+  async lookUp(queries: SearchCategoryDto): Promise<any> {
     let results: any[];
-    const isBrand = brand;
-    const isProduct = product;
+    const isBrand = queries.brand;
+    const isProduct = queries.product;
+    const categoryNames = queries.category_name;
 
     const columnNames = Array(categoryNames.length).fill('category_name');
 
