@@ -6,6 +6,7 @@ import { Query } from 'src/queryHelper';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { CreateIntermediateDto } from 'src/create-intermediate.dto';
+import { SearchBrandDto } from './dto/search-brand.dto';
 
 import { Brand } from './entities/brand.entity';
 import { Category } from 'src/category/entities/category.entity';
@@ -76,14 +77,11 @@ export class BrandService {
     return await this.brandRepository.find();
   }
 
-  async lookUp(
-    brandNames: string[],
-    category: boolean,
-    product: boolean,
-  ): Promise<any> {
+  async lookUp(queries: SearchBrandDto): Promise<any> {
     let results: any[];
-    const isCategory = category;
-    const isProduct = product;
+    const isCategory = queries.category;
+    const isProduct = queries.product;
+    const brandNames = queries.brand_name;
 
     const columnNames = Array(brandNames.length).fill('brand_name');
 

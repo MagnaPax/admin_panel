@@ -7,11 +7,11 @@ import {
   Param,
   Delete,
   Query,
-  ParseBoolPipe,
 } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
+import { SearchBrandDto } from './dto/search-brand.dto';
 
 @Controller('brand')
 export class BrandController {
@@ -26,13 +26,10 @@ export class BrandController {
   findAll() {
     return this.brandService.findAll();
   }
+
   @Get('search')
-  search(
-    @Query('brand_name') brandNames: string[],
-    @Query('category', ParseBoolPipe) category: boolean,
-    @Query('product', ParseBoolPipe) product: boolean,
-  ) {
-    return this.brandService.lookUp(brandNames, category, product);
+  search(@Query() query: SearchBrandDto) {
+    return this.brandService.lookUp(query);
   }
 
   @Get(':id')
