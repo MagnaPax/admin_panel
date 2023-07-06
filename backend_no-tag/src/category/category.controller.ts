@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -27,9 +28,9 @@ export class CategoryController {
     return this.categoryService.lookUp(query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoryService.findOne(+id);
+  @Get(':ids')
+  findSome(@Param('ids', ParseArrayPipe) ids: number[]) {
+    return this.categoryService.findSome(ids);
   }
 
   @Post()

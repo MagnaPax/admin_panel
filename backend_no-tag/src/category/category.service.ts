@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Query } from 'src/queryHelper';
 
@@ -134,6 +134,12 @@ export class CategoryService {
     }
 
     return results;
+  }
+
+  async findSome(ids: number[]) {
+    return await this.categoryRepository.find({
+      where: { category_id: In(ids) },
+    });
   }
 
   async findOne(category_id: number) {
