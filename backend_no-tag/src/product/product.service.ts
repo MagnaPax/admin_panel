@@ -6,6 +6,7 @@ import { Query } from 'src/queryHelper';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RemoveProductDto } from './dto/remove-product.dto';
+import { SearchProductDto } from './dto/search-product.dto';
 
 import { Product } from './entities/product.entity';
 import { Intermediate } from 'src/intermediate.entity';
@@ -110,6 +111,35 @@ export class ProductService {
 
   async findAll() {
     return await this.productRepository.find();
+  }
+
+  async lookUp(queries: SearchProductDto): Promise<any> {
+    const columns: string[] = [];
+    const values: any[] = [];
+
+    // 프로덕트 검색
+    // 검색 필드 뽑기
+    Object.entries(queries).forEach(([key, value]) => {
+      const valueCount = Array.isArray(value) ? value.length : 1;
+      columns.push(...Array(valueCount).fill(key));
+    });
+
+    // 검색 값 뽑기
+    Object.values(queries).forEach((value) => {
+      if (Array.isArray(value)) {
+        values.push(...value);
+      } else {
+        values.push(value);
+      }
+    });
+
+    const products = await this.query.findRecordsByValues(
+      values,
+      columns,
+      this.productRepository,
+    );
+
+    return products;
   }
 
   async findOne(product_id: number) {

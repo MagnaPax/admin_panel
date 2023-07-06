@@ -31,8 +31,7 @@ export class ProductController {
 
   @Get('search')
   search(@Query() query: SearchProductDto) {
-    const { pName, sex, kids, qty } = query;
-    return this.productService.lookUp(pName, sex, kids, qty);
+    return this.productService.lookUp(query);
   }
 
   @Get(':id')
