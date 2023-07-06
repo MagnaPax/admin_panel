@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Query } from 'src/queryHelper';
 
@@ -134,6 +134,10 @@ export class BrandService {
     }
 
     return results;
+  }
+
+  async findSome(ids: number[]) {
+    return await this.brandRepository.find({ where: { brand_id: In(ids) } });
   }
 
   async findOne(brand_id: number) {

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
@@ -32,9 +33,9 @@ export class BrandController {
     return this.brandService.lookUp(query);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.brandService.findOne(+id);
+  @Get(':ids')
+  findSome(@Param('ids', ParseArrayPipe) ids: number[]) {
+    return this.brandService.findSome(ids);
   }
 
   @Patch(':id')
