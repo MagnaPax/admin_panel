@@ -18,6 +18,11 @@ import { SearchCategoryDto } from './dto/search-category.dto';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @Post()
+  create(@Body() createCategory: CreateCategoryDto) {
+    return this.categoryService.create(createCategory);
+  }
+
   @Get()
   findAll() {
     return this.categoryService.findAll();
@@ -31,11 +36,6 @@ export class CategoryController {
   @Get(':ids')
   findSome(@Param('ids', ParseArrayPipe) ids: number[]) {
     return this.categoryService.findSome(ids);
-  }
-
-  @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
   }
 
   @Patch(':id')
