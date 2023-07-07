@@ -219,6 +219,6 @@ yarn-error.log
 /backend_notag/!.vscode/extensions.json
 
 .env
-
+/backend_notag/storage/
 문제.md
 old_README.md
