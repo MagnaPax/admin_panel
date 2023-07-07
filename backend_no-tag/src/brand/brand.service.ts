@@ -57,6 +57,28 @@ export class BrandService {
     }
     await this.intermediateRepository.save(intermediateRecord);
 
+    // 중간 테이블 정리
+    if (createBrandDto.category_ids) {
+      const valueCategoryIds = intermediateRecord.map(
+        (record) => record.category_id,
+      );
+      const categoryColumnNames = Array(valueCategoryIds.length).fill(
+        'category_id',
+      );
+
+      const sameCategories = await this.query.findRecordsByValues(
+        valueCategoryIds,
+        categoryColumnNames,
+        this.intermediateRepository,
+      );
+
+      const nullBrandIds = Object.values(sameCategories).filter(
+        (record) => record.brand_id === null,
+      );
+
+      await this.intermediateRepository.remove(nullBrandIds);
+    }
+
     return newBrand;
   }
 
