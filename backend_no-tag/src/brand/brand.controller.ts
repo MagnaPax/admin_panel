@@ -19,8 +19,8 @@ export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 
   @Post()
-  create(@Body() createBrandDto: CreateBrandDto) {
-    return this.brandService.create(createBrandDto);
+  create(@Body() createBrand: CreateBrandDto) {
+    return this.brandService.create(createBrand);
   }
 
   @Get()

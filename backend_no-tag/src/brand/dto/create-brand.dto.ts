@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsNumber,
+  IsArray,
 } from 'class-validator';
 
 export class CreateBrandDto {
@@ -13,6 +14,7 @@ export class CreateBrandDto {
   brand_name: string;
 
   @IsOptional()
-  @IsNumber()
-  category_id: number;
+  @IsNumber({}, { each: true }) // 각 요소에 대해 숫자 검증
+  @IsArray()
+  category_ids?: number[];
 }
