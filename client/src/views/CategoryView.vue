@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
-
 </script>
+
 <template>
-    <div>Category</div>
+    <section class="category">
+        <div>
+            카테고리
+        </div>
+    </section>
 </template>

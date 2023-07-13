@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+
 import Header from './components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import Navigation from '@/components/Navigation.vue'
 </script>
 
 <template>
-  <Header />
-  <Navigation />
-  <main>
-    <RouterView />
-  </main>
-  <Footer />
+  <body>
+    <Header />
+    <Navigation />
+    <main>
+      <RouterView />
+    </main>
+    <Footer />
+  </body>
 </template>
 
 <style scoped>

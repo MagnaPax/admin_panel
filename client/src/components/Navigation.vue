@@ -4,10 +4,10 @@ import { ref } from 'vue'
 </script>
 
 <template>
-    <div class="wrapper">
-        <nav>
-            <RouterLink to="/">Home</RouterLink>
-            <RouterLink to="/about">About</RouterLink>
-        </nav>
-    </div>
+    <nav class="container">
+        <RouterLink to="/home">Dashboard</RouterLink>
+        <RouterLink to="/brand">Brands</RouterLink>
+        <RouterLink to="/category">Categories</RouterLink>
+        <RouterLink to="/product">Products</RouterLink>
+    </nav>
 </template>
