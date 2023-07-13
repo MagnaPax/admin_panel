@@ -218,7 +218,37 @@ yarn-error.log
 /backend_notag/!.vscode/launch.json
 /backend_notag/!.vscode/extensions.json
 
+/backend_no-tag/storage
+
+#################################################################################
+#####################################  CLIENT ###################################
+#################################################################################
+
+# Created by https://www.toptal.com/developers/gitignore/api/vue,vuejs
+# Edit at https://www.toptal.com/developers/gitignore?templates=vue,vuejs
+
+### Vue ###
+# gitignore template for Vue.js projects
+#
+# Recommended template: Node.gitignore
+
+# TODO: where does this rule come from?
+/client/docs/_book
+
+# TODO: where does this rule come from?
+/client/test/
+
+### Vuejs ###
+# Recommended template: Node.gitignore
+
+/client/node_modules/
+/client/dist/
+/client/npm-debug.log
+/client/yarn-error.log
+
+# End of https://www.toptal.com/developers/gitignore/api/vue,vuejs
+
+#################################################################################
 .env
-/backend_notag/storage/
 문제.md
 old_README.md
