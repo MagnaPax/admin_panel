@@ -142,12 +142,12 @@ dist
 .svelte-kit
 
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+.vscode/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 .history/
@@ -212,11 +212,12 @@ yarn-error.log
 /backend_notag/*.sublime-workspace
 
 # IDE - VSCode
-/backend_notag/.vscode/*
-/backend_notag/!.vscode/settings.json
-/backend_notag/!.vscode/tasks.json
-/backend_notag/!.vscode/launch.json
-/backend_notag/!.vscode/extensions.json
+/backend_notag/.vscode/
+/backend_notag/.vscode/settings.json
+/backend_notag/.vscode/tasks.json
+/backend_notag/.vscode/launch.json
+/backend_notag/.vscode/extensions.json
+/backend_notag/.vscode/*.code-snippets
 
 /backend_no-tag/storage
 
@@ -252,12 +253,12 @@ yarn-error.log
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
 
 ### VisualStudioCode ###
-/client/.vscode/*
-/client/!.vscode/settings.json
-/client/!.vscode/tasks.json
-/client/!.vscode/launch.json
-/client/!.vscode/extensions.json
-/client/!.vscode/*.code-snippets
+/client/.vscode/
+/client/.vscode/settings.json
+/client/.vscode/tasks.json
+/client/.vscode/launch.json
+/client/.vscode/extensions.json
+/client/.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 /client/.history/
@@ -292,8 +293,8 @@ yarn-error.log
 /client/cypress/screenshots/
 
 # Editor directories and files
-/client/.vscode/*
-/client/!.vscode/extensions.json
+/client/.vscode/
+/client/.vscode/extensions.json
 /client/.idea
 /client/*.suo
 /client/*.ntvs*
