@@ -30,6 +30,9 @@ export class Product {
   @Column()
   sales_quantity: number;
 
+  @Column({ type: 'json', nullable: true })
+  file_paths: string[];
+
   @ManyToOne(() => Intermediate, (intermediate) => intermediate.brandProducts)
   @JoinColumn({ name: 'brand_id', referencedColumnName: 'brand_id' })
   intermediate_brand: Intermediate;

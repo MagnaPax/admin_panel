@@ -7,6 +7,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RemoveProductDto } from './dto/remove-product.dto';
 import { SearchProductDto } from './dto/search-product.dto';
+import { MakeProductDto } from './dto/make-product.dto';
 
 import { Product } from './entities/product.entity';
 import { Intermediate } from 'src/intermediate.entity';
@@ -97,6 +98,24 @@ export class ProductService {
     });
 
     return;
+  }
+
+  async createProduct(
+    files: Express.Multer.File[],
+    data: CreateProductDto,
+  ): Promise<Product> {
+    // 중간 테이블 업데이트
+    await this.updateIntermediate(data.brand_id, data.category_id);
+
+    // 파일 처리
+    const filePaths: string[] = [];
+    files.forEach((file) => filePaths.push(file.path));
+
+    // 파일 경로 추가
+    data['file_paths'] = filePaths;
+
+    // Product 엔티티를 DB에 저장
+    return await this.productRepository.save(data);
   }
 
   async create(createProductDto: CreateProductDto) {

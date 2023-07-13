@@ -5,6 +5,8 @@ import {
   IsBoolean,
   IsPositive,
   IsNotEmpty,
+  IsOptional,
+  IsJSON,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -38,4 +40,8 @@ export class CreateProductDto {
   @IsNumber()
   @IsPositive()
   sales_quantity: number;
+
+  @IsOptional()
+  @IsJSON()
+  file_paths?: string[];
 }
