@@ -6,6 +6,7 @@ import { ormConfig } from './orm.config';
 import { BrandModule } from './brand/brand.module';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ProductModule } from './product/product.module';
     CategoryModule,
     TypeOrmModule.forRootAsync({ useFactory: ormConfig }),
     ProductModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

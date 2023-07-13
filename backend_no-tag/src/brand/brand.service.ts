@@ -40,6 +40,61 @@ export class BrandService {
     // 브랜드 추가
     const newBrand = await this.brandRepository.save(createBrandDto);
 
+    // 중간 테이블에 새로 생성된 brand_id 추가
+    let intermediateRecord: any;
+    if (createBrandDto.category_ids) {
+      // 카테고리가 같이 입력 됐을 때
+      intermediateRecord = createBrandDto.category_ids.map((categoryId) => ({
+        brand_id: newBrand.brand_id,
+        category_id: categoryId,
+      }));
+    } else {
+      // 카테고리가 입력 안됐을 때
+      intermediateRecord = {
+        brand_id: newBrand.brand_id,
+        category_id: null,
+      };
+    }
+    await this.intermediateRepository.save(intermediateRecord);
+
+    // 중간 테이블 정리
+    if (createBrandDto.category_ids) {
+      const valueCategoryIds = intermediateRecord.map(
+        (record) => record.category_id,
+      );
+      const categoryColumnNames = Array(valueCategoryIds.length).fill(
+        'category_id',
+      );
+
+      const sameCategories = await this.query.findRecordsByValues(
+        valueCategoryIds,
+        categoryColumnNames,
+        this.intermediateRepository,
+      );
+
+      const nullBrandIds = Object.values(sameCategories).filter(
+        (record) => record.brand_id === null,
+      );
+
+      await this.intermediateRepository.remove(nullBrandIds);
+    }
+
+    return newBrand;
+  }
+
+  // async create2(createBrandDto: CreateBrandDto): Promise<Brand> {
+  async create2(createBrandDto: any): Promise<Brand> {
+    // 브랜드 이름이 중복되지 않게
+    const isDuplicated = await this.query.findRecordsByValues(
+      [`${createBrandDto.brand_name}`],
+      ['brand_name'],
+      this.brandRepository,
+    );
+    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
+
+    // 브랜드 추가
+    const newBrand = await this.brandRepository.save(createBrandDto);
+
     // 중간 테이블에 추가
     const intermediate: CreateIntermediateDto = {
       brand_id: newBrand.brand_id,

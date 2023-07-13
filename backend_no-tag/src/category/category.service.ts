@@ -28,46 +28,51 @@ export class CategoryService {
     private intermediateRepository: Repository<Intermediate>,
   ) {}
 
-  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+  async create(createCategory: CreateCategoryDto): Promise<Category> {
     // 카테고리 이름이 중복되지 않게
     const isDuplicated = await this.query.findRecordsByValues(
-      [`${createCategoryDto.category_name}`],
+      [`${createCategory.category_name}`],
       ['category_name'],
       this.categoryRepository,
     );
     if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
 
-    // 카테고리 추가
-    const newCategory = await this.categoryRepository.save(createCategoryDto);
+    // 브랜드 추가
+    const newCategory = await this.categoryRepository.save(createCategory);
 
-    // 중간 테이블에 추가
-    const intermediate: CreateIntermediateDto = {
-      category_id: newCategory.category_id,
-      brand_id: createCategoryDto.brand_id,
-    };
-    await this.intermediateRepository.save(intermediate);
+    // 중간 테이블에 새로 생성된 category_id 추가
+    let intermediateRecord: any;
+    if (createCategory.brand_ids) {
+      // 브랜드가 같이 입력 됐을 때
+      intermediateRecord = createCategory.brand_ids.map((brandId) => ({
+        category_id: newCategory.category_id,
+        brand_id: brandId,
+      }));
+    } else {
+      // 브랜드가 입력 안 됐을 때
+      intermediateRecord = {
+        category_id: newCategory.category_id,
+        brand_id: null,
+      };
+    }
+    await this.intermediateRepository.save(intermediateRecord);
 
-    // 중간 테이블에서 중복되는 category_id들 정리
-    if (
-      createCategoryDto.brand_id !== null &&
-      createCategoryDto.brand_id !== undefined
-    ) {
+    // 중간 테이블 정리
+    if (createCategory.brand_ids) {
+      const valueBrandIds = intermediateRecord.map((record) => record.brand_id);
+      const brandColumnNames = Array(valueBrandIds.length).fill('brand_id');
+
       const sameBrands = await this.query.findRecordsByValues(
-        [`${newCategory.brand_id}`],
-        ['brand_id'],
+        valueBrandIds,
+        brandColumnNames,
         this.intermediateRepository,
       );
 
-      // 중간 테이블에 지금 입력한 것 외에도 같은 brand_id 값을 가진 레코드가 있을 때
-      if (sameBrands.length > 1) {
-        const nullRecords = sameBrands.filter((el) => el.category_id === null);
+      const nullCategoryIds = Object.values(sameBrands).filter(
+        (record) => record.category_id === null,
+      );
 
-        for (const el of nullRecords) {
-          el.brand_id = null;
-          await this.intermediateRepository.save(el);
-        }
-        await this.intermediateRepository.remove(nullRecords);
-      }
+      await this.intermediateRepository.remove(nullCategoryIds);
     }
 
     return newCategory;
