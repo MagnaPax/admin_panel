@@ -248,6 +248,30 @@ yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/vue,vuejs
 
+# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
+
+### VisualStudioCode ###
+/client/.vscode/*
+/client/!.vscode/settings.json
+/client/!.vscode/tasks.json
+/client/!.vscode/launch.json
+/client/!.vscode/extensions.json
+/client/!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+/client/.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+/client/.history
+/client/.ionide
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
 #################################################################################
 .env
 문제.md
