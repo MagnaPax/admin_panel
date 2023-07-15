@@ -41,4 +41,11 @@ export default class CommonApi {
     const response = await this.axiosInstance.get(requestURL)
     this.saveResult(path, response)
   }
+
+  async post(path: string, body: object) {
+    const requestURL = this.settingURL(path)
+    const response = await this.axiosInstance.post(requestURL, body)
+    console.log('추가한 결과:', JSON.stringify(response.data))
+    return response.data
+  }
 }

@@ -49,7 +49,20 @@ function addId() {
     }
 }
 
-function addBrand() {
+async function addBrand() {
+    const path = 'brand'
+    let body: any = {}
+    const IDs = Object.values(categoryNames.value)
+
+    body.brand_name = brandName.value
+    if (IDs.length > 0) body.category_ids = IDs
+
+    body = JSON.stringify(body)
+
+    brandName.value = ''
+    categoryName.value = null;
+
+    await request.post(path, body)
 }
 
 onMounted(() => {

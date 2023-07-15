@@ -7,13 +7,13 @@ export const useCounterStore = defineStore('counter', {
     productList: [] as object[]
   }),
   actions: {
-    async setBrandList(brandList: object[]) {
+    setBrandList(brandList: object[]): void {
       this.brandList = brandList
     },
-    async setCategoryList(categoryList: object[]) {
+    setCategoryList(categoryList: object[]): void {
       this.categoryList = categoryList
     },
-    async setProductList(productList: object[]) {
+    setProductList(productList: object[]): void {
       this.productList = productList
     }
   }
