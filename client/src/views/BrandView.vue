@@ -42,9 +42,15 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     await request.get(fullURL)
 }
 
-function addId() { }
+function addId() {
+    if (categoryName.value !== null && !categoryNames.value.includes(categoryName.value)) {
+        categoryNames.value.push(categoryName.value);
+        categoryName.value = null;
+    }
+}
 
-function addBrand() { }
+function addBrand() {
+}
 
 onMounted(() => {
     getBrands()
@@ -77,6 +83,5 @@ onMounted(() => {
                 <input class="button" type="submit" value="Create Brand">
             </form>
         </article>
-
     </section>
 </template>
