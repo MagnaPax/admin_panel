@@ -8,14 +8,16 @@ const request = new CommonApi
 const counterStore = useCounterStore()
 
 // store의 값이 변경될때마다 적용
-const brands = computed(() => counterStore.brandList)
+const brands = computed(() => counterStore.brandList as { brand_id: number; brand_name: string; }[])
 const categories = computed(() => counterStore.categoryList as { category_id: number; category_name: string; }[])
 
-const brandName = ref('')
+const brandName = ref<string | null>(null)
 const brandNames = ref<string[]>([])
 const categoryName = ref<string | null>(null)
 const categoryNames = ref<string[]>([])
 const checkedItems = ref<string[]>([])
+const deleteName = ref<string | null>(null)
+const deleteNames = ref<string[]>([])
 
 
 
@@ -105,6 +107,28 @@ async function searchBrands() {
     }
 }
 
+async function deleteId() {
+    if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
+        deleteNames.value.push(deleteName.value);
+        deleteName.value = null;
+    }
+}
+
+async function deleteBrand() {
+    let fullURL: string = ''
+    const path = 'brand'
+    const IDs = Object.values(deleteNames.value)
+
+    for (const el of IDs) {
+        console.log(el)
+        fullURL = `brand/${el}`
+        const response = await request.delete(fullURL);
+        await request.saveResult(path, response);
+    }
+
+    brandName.value = ''
+}
+
 onMounted(() => {
     getBrands()
     getCategories()
@@ -124,7 +148,7 @@ onMounted(() => {
                             {{ category.category_name }}
                         </option>
                     </select>
-                    <button @click="addId">Add</button>
+                    <button @click.prevent="addId">Add</button>
                 </div>
 
                 <div class="inputted_category">
@@ -155,6 +179,32 @@ onMounted(() => {
 
                 <input class="button" type="submit" value="Submit" :disabled="brandNames.length === 0">
             </form>
+        </article>
+
+        <article class="delete">
+            <h3>Remove Brand Name</h3>
+            <form @submit.prevent="deleteBrand">
+                <div class="menu">
+                    <select id="deleteSelect" v-model="deleteName">
+                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id"
+                            placeholder="Select Relative Category">
+                            {{ brand.brand_name }}
+                        </option>
+                    </select>
+                    <button @click.prevent="deleteId">Add to delete</button>
+                </div>
+
+                <ul>
+                    <li v-for="id in deleteNames" :key="id">{{ id }}</li>
+                </ul>
+                <input class="button" type="submit" value="Delete Brands">
+            </form>
+        </article>
+
+        <article class="list">
+            <ul>
+                <li v-for="(brand, i) in brands" :key="i">{{ brand.brand_name }}</li>
+            </ul>
         </article>
     </section>
 </template>

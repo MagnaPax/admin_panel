@@ -49,4 +49,11 @@ export default class CommonApi {
     console.log('추가한 결과:', JSON.stringify(response.data))
     return response.data
   }
+
+  async delete(path: string) {
+    const requestURL = this.settingURL(path)
+    const response = await this.axiosInstance.delete(requestURL)
+    await this.saveResult(path, response)
+    return response
+  }
 }
