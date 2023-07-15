@@ -1,14 +1,18 @@
 import axios from 'axios'
-import type { AxiosRequestConfig } from 'axios'
+import { setInterceptors } from './interceptors'
 
 export default class CommonApi {
   host: string = 'http://localhost:5425/'
-  config: AxiosRequestConfig = {
+
+  axiosInstance = axios.create({
     baseURL: this.host,
     responseType: 'json',
     headers: { 'Content-Type': 'application/json' }
+  })
+
+  constructor() {
+    setInterceptors(this.axiosInstance)
   }
-  axiosInstance = axios.create(this.config)
 
   private settingURL(path: string): string {
     return `${this.host}${path}`
