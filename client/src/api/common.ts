@@ -1,9 +1,11 @@
 import axios from 'axios'
 import { setInterceptors } from './interceptors'
+import { useCounterStore } from '@/stores/counter'
 
 export default class CommonApi {
-  host: string = 'http://localhost:5425/'
+  counterStore = useCounterStore()
 
+  host: string = 'http://localhost:5425/'
   axiosInstance = axios.create({
     baseURL: this.host,
     responseType: 'json',
@@ -21,6 +23,7 @@ export default class CommonApi {
   async get(path: string) {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.get(requestURL)
-    return response.data
+
+    this.counterStore.setBrandList(response.data)
   }
 }
