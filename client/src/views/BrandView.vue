@@ -3,15 +3,21 @@ import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
+
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-const brandName = ref('')
-const categoryName = ref<string | null>(null)
-const categoryNames = ref<string[]>([])
 // store의 값이 변경될때마다 적용
 const brands = computed(() => counterStore.brandList)
 const categories = computed(() => counterStore.categoryList as { category_id: number; category_name: string; }[])
+
+const brandName = ref('')
+const brandNames = ref<string[]>([])
+const categoryName = ref<string | null>(null)
+const categoryNames = ref<string[]>([])
+const checkedItems = ref<string[]>([])
+
+
 
 async function getCategories(path: string = 'category') {
     await request.get(path)
@@ -39,7 +45,8 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
         fullURL = path;
     }
 
-    await request.get(fullURL)
+    const response = await request.get(fullURL);
+    await request.saveResult(path, response);
 }
 
 function addId() {
@@ -63,6 +70,39 @@ async function addBrand() {
     categoryName.value = null;
 
     await request.post(path, body)
+}
+
+
+function onCheckboxChange(checkbox) {
+    if (checkbox === 'na') {
+        this.checkedItems = ['na'];
+    } else if (checkbox === 'category' || checkbox === 'product') {
+        if (this.checkedItems.includes('na')) {
+            this.checkedItems = [checkbox];
+        }
+    }
+}
+
+async function searchBrands() {
+    // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
+    const values: string[] = brandNames.value.replace(/,\s*$/, '').split(",")
+    // 각 값의 앞뒤 공백 제거
+    const bNames = values.map((value) => value.trim())
+
+    const tables = Object.values(checkedItems.value)
+    const product = tables.includes('product')
+    const category = tables.includes('category')
+
+
+    if (product && category) {
+        await getBrands('brand', bNames, true, true)
+    } else if (product) {
+        await getBrands('brand', bNames, undefined, true)
+    } else if (category) {
+        await getBrands('brand', bNames, true)
+    } else {
+        await getBrands('brand', bNames)
+    }
 }
 
 onMounted(() => {
@@ -94,6 +134,26 @@ onMounted(() => {
                 </div>
                 <input class="input" type="text" v-model="brandName" placeholder="Input Brand name">
                 <input class="button" type="submit" value="Create Brand">
+            </form>
+        </article>
+
+        <article class="search">
+            <h3>Look Up Brand Names</h3>
+            <form @submit.prevent="searchBrands">
+                <input class="input" type="text" v-model="brandNames" placeholder="name, name, ...">
+
+                <input id="ch_na" type="checkbox" v-model="checkedItems" value="na" @change="onCheckboxChange('na')" />
+                <label for="ch_na">N/A</label>
+
+                <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
+                    @change="onCheckboxChange('category')" />
+                <label for="ch_category">For the categories</label>
+
+                <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
+                    @change="onCheckboxChange('product')" />
+                <label for="ch_product">For the products</label>
+
+                <input class="button" type="submit" value="Submit" :disabled="brandNames.length === 0">
             </form>
         </article>
     </section>

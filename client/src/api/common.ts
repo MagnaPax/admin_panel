@@ -23,23 +23,24 @@ export default class CommonApi {
   async saveResult(path: string, response: AxiosResponse<any, any>) {
     switch (path) {
       case 'brand':
-        this.counterStore.setBrandList(response.data)
+        await this.counterStore.setBrandList(response.data)
         break
       case 'category':
-        this.counterStore.setCategoryList(response.data)
+        await this.counterStore.setCategoryList(response.data)
         break
       case 'product':
-        this.counterStore.setCategoryList(response.data)
+        await this.counterStore.setProductList(response.data)
         break
       default:
         break
     }
   }
 
-  async get(path: string) {
+  async get(path: string): Promise<void> {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.get(requestURL)
-    this.saveResult(path, response)
+    await this.saveResult(path, response)
+    return response
   }
 
   async post(path: string, body: object) {
