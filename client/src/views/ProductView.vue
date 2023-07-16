@@ -32,13 +32,7 @@ const selectedFiles = ref([''])
 const selectedkey = ref('')
 const selectedBrands = ref(0)
 const selectedCategories = ref(0)
-
-const updateID = ref<string | null>(null)
-const productName = ref<string | null>(null)
-const productNames = ref<string[]>([])
-
 const searchWords = ref<string[]>([])
-
 const structureProduct = ['product_name', 'brand', 'category', 'sex', 'kid', 'sales_qty']
 
 let searchProductNames = ref<string[]>([])
