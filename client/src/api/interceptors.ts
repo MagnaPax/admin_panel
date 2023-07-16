@@ -1,3 +1,14 @@
+// 응답을 받은 후에 호출되는 함수
+function handleErrorResponse(error) {
+  if (error.response && error.response.data && error.response.data.message) {
+    const errorMessage = error.response.data.message.join('\n')
+    console.log('Error:', errorMessage)
+    alert(errorMessage)
+  } else {
+    console.log('An error occurred:', error.message)
+  }
+}
+
 export function setInterceptors(instance) {
   // 요청 인터셉터 추가하기
   instance.interceptors.request.use(
@@ -20,7 +31,10 @@ export function setInterceptors(instance) {
     },
     function (error) {
       // 2xx 외의 범위에 있는 상태 코드는 이 함수를 트리거 합니다.
-      // 응답 오류가 있는 작업 수행
+      // validateStatus 함수를 사용하여 응답 상태 코드를 확인
+      if (error.response && error.response.status && !validateStatus(error.response.status)) {
+        handleErrorResponse(error)
+      }
       return Promise.reject(error)
     }
   )
