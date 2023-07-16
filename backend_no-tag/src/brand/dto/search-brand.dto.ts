@@ -2,7 +2,6 @@ import {
   IsBoolean,
   IsString,
   IsOptional,
-  ArrayUnique,
   ArrayNotEmpty,
   IsNotEmpty,
 } from 'class-validator';
@@ -11,7 +10,6 @@ import { Transform } from 'class-transformer';
 export class SearchBrandDto {
   @IsString({ each: true })
   @ArrayNotEmpty()
-  @ArrayUnique()
   @IsNotEmpty({ each: true }) // 각 요소에 대해 검증
   @Transform(({ value }) => {
     if (value.includes('undefined') || value.includes('null')) {
