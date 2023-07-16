@@ -353,3 +353,53 @@ onMounted(() => {
         </article>
     </section>
 </template>
+
+<style scoped>
+.category-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.category-wrapper form {
+    margin-bottom: 20px;
+}
+
+.category-wrapper label {
+    margin-bottom: 10px;
+}
+
+.category-wrapper .menu {
+    display: flex;
+    align-items: center;
+}
+
+.category-wrapper .inputted_brand {
+    margin-bottom: 20px;
+}
+
+.category-wrapper .inputted_brand ul {
+    list-style: none;
+    padding: 0;
+}
+
+.category-wrapper .inputted_brand li {
+    margin-bottom: 5px;
+}
+
+.category-wrapper .list {
+    margin-top: 20px;
+}
+
+.category-wrapper .list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.category-wrapper .list li {
+    margin-bottom: 5px;
+}
+</style>

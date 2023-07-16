@@ -1,19 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-
+import { RouterLink } from 'vue-router'
 </script>
 
 <template>
     <header>
-        <div>
-            <img @click="" src="@/assets/logo_NoTag.jpg" alt="logo" />
-        </div>
+        <RouterLink to="/home">
+            <div>
+                <img src="@/assets/logo_NoTag.jpg" alt="logo" />
+            </div>
+        </RouterLink>
     </header>
 </template>
 
 <style scoped>
 header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
     background-color: #333;
+    color: #fff;
+    padding: 20px;
+}
+
+.logo-container {
+    margin-left: auto;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
 }
 </style>

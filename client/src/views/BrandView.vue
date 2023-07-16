@@ -335,3 +335,53 @@ onMounted(() => {
         </article>
     </section>
 </template>
+
+<style scoped>
+.brand-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.brand-wrapper form {
+    margin-bottom: 20px;
+}
+
+.brand-wrapper label {
+    margin-bottom: 10px;
+}
+
+.brand-wrapper .menu {
+    display: flex;
+    align-items: center;
+}
+
+.brand-wrapper .inputted_category {
+    margin-bottom: 20px;
+}
+
+.brand-wrapper .inputted_category ul {
+    list-style: none;
+    padding: 0;
+}
+
+.brand-wrapper .inputted_category li {
+    margin-bottom: 5px;
+}
+
+.brand-wrapper .list {
+    margin-top: 20px;
+}
+
+.brand-wrapper .list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.brand-wrapper .list li {
+    margin-bottom: 5px;
+}
+</style>

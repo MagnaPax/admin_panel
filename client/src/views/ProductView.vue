@@ -334,9 +334,6 @@ onMounted(() => {
 
 
 
-
-
-
         <article class="list">
             <h2>Products</h2>
             <div class="product-cards">
@@ -363,3 +360,69 @@ onMounted(() => {
         </article>
     </section>
 </template>
+
+<style scoped>
+.product-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.product-wrapper form {
+    margin-bottom: 20px;
+}
+
+.product-wrapper label {
+    margin-bottom: 10px;
+}
+
+.product-wrapper .input-container {
+    margin-bottom: 10px;
+}
+
+.product-wrapper .menu {
+    display: flex;
+    align-items: center;
+}
+
+.product-wrapper .product-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.product-wrapper .product-card {
+    width: 300px;
+    margin: 10px;
+    padding: 20px;
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.product-wrapper .product-details {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.product-wrapper .product-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.product-wrapper .list {
+    margin-top: 20px;
+}
+
+.product-wrapper .list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.product-wrapper .list li {
+    margin-bottom: 5px;
+}
+</style>

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-
 </script>
 
 <template>
@@ -11,7 +8,21 @@ import { ref } from 'vue'
 </template>
 
 <style scoped>
-header {
+footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
     background-color: #333;
+    color: #fff;
+    padding: 20px;
+}
+
+.logo-container {
+    margin-left: auto;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
 }
 </style>
