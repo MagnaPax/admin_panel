@@ -4,7 +4,6 @@ import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
 
-
 const request = new CommonApi
 const counterStore = useCounterStore()
 
@@ -15,6 +14,9 @@ const categories = computed(() => counterStore.categoryList as { category_id: nu
 const brandName = ref<string | null>(null)
 const brandNames = ref<string[]>([])
 const categoryName = ref<string | null>(null)
+
+const updateID = ref<string | null>(null)
+const newCategoryName = ref<string | null>(null)
 
 
 
@@ -72,6 +74,29 @@ async function addCategory() {
     await request.post(path, body)
 }
 
+async function updateCategory() {
+    let fullURL: string = ''
+    const path = 'category'
+    let body: any = {}
+
+    fullURL = `${path}/${updateID.value}`
+
+    body.category_name = newCategoryName.value
+    body = JSON.stringify(body)
+
+    newCategoryName.value = ''
+
+    const response = await request.update(fullURL, body);
+    await request.saveResult(path, response);
+
+}
+
+
+
+
+
+
+
 onMounted(() => {
     if (!brands.value.length && !categories.value.length) {
         getBrands()
@@ -103,6 +128,23 @@ onMounted(() => {
                 </div>
                 <input class="input" type="text" v-model="categoryName" placeholder="Input Category name">
                 <input class="button" type="submit" value="Create Category">
+            </form>
+        </article>
+
+
+        <article class="update">
+            <h3>Update Category Name</h3>
+            <form @submit.prevent="updateCategory">
+                <div class="menu">
+                    <select id="updateSelect" v-model="updateID">
+                        <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
+                            {{ category.category_name }}
+                        </option>
+                    </select>
+                    TO
+                </div>
+                <input class="input" type="text" v-model="newCategoryName" placeholder="New Category name">
+                <input class="button" type="submit" value="Update Category">
             </form>
         </article>
 
