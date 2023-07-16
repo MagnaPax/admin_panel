@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import CommonApi from '@/api/common'
-import { useCounterStore } from '@/stores/counter';
+import { useCounterStore } from '@/stores/counter'
 
 
 const request = new CommonApi
@@ -57,9 +57,9 @@ async function getCategories(path: string = 'category', categoryNames?: string[]
 
     if (categoryNames || typeof brand !== 'undefined' || typeof product !== 'undefined') {
         // 쿼리 문자열의 첫 번째 '&'를 '?'로 변경
-        fullURL = `${path}/search${fullURL.replace('&', '?')}`;
+        fullURL = `${path}/search${fullURL.replace('&', '?')}`
     } else {
-        fullURL = path;
+        fullURL = path
     }
 
 
@@ -91,9 +91,9 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
 
     if (brandNames || typeof category !== 'undefined' || typeof product !== 'undefined') {
         // 쿼리 문자열의 첫 번째 '&'를 '?'로 변경
-        fullURL = `${path}/search${fullURL.replace('&', '?')}`;
+        fullURL = `${path}/search${fullURL.replace('&', '?')}`
     } else {
-        fullURL = path;
+        fullURL = path
     }
 
     const response = await request.get(fullURL)
@@ -109,8 +109,8 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
 
 function addId() {
     if (brandName.value !== null && !brandNames.value.includes(brandName.value)) {
-        brandNames.value.push(brandName.value);
-        brandName.value = null;
+        brandNames.value.push(brandName.value)
+        brandName.value = null
     }
 }
 
@@ -145,17 +145,18 @@ async function updateCategory() {
 
     newCategoryName.value = ''
 
-    const response = await request.update(fullURL, body);
-    await request.saveResult(path, response);
+    const response = await request.update(fullURL, body)
+    await request.saveResult(path, response)
 
+    getCategories() // categories 갱신
 }
 
 function onCheckboxChange(checkbox) {
     if (checkbox === 'na') {
-        this.checkedItems = ['na'];
+        this.checkedItems = ['na']
     } else if (checkbox === 'brand' || checkbox === 'product') {
         if (this.checkedItems.includes('na')) {
-            this.checkedItems = [checkbox];
+            this.checkedItems = [checkbox]
         }
     }
 }
@@ -163,8 +164,14 @@ function onCheckboxChange(checkbox) {
 async function searchCategories() {
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
     const values: string[] = categoryNames.value.replace(/,\s*$/, '').split(",")
-    // 각 값의 앞뒤 공백 제거
-    const cNames = values.map((value) => value.trim())
+
+    // 각 값의 앞뒤 공백 제거하고 중복 제거
+    const cNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
+
+    // 단어가 한 개만 들어오는 경우, 두 개로 복사하여 추가(백엔드 설계 결함)
+    if (cNames.length === 1) {
+        cNames.push(cNames[0])
+    }
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
@@ -194,8 +201,8 @@ function getImage(name: string) {
 
 async function deleteId() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
-        deleteNames.value.push(deleteName.value);
-        deleteName.value = null;
+        deleteNames.value.push(deleteName.value)
+        deleteName.value = null
     }
 }
 
@@ -207,8 +214,8 @@ async function deleteCategory() {
     for (const el of IDs) {
         console.log(el)
         fullURL = `category/${el}`
-        const response = await request.delete(fullURL);
-        await request.saveResult(path, response);
+        const response = await request.delete(fullURL)
+        await request.saveResult(path, response)
     }
 
     deleteNames.value = ''

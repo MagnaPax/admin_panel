@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import CommonApi from '@/api/common'
-import { useCounterStore } from '@/stores/counter';
+import { useCounterStore } from '@/stores/counter'
 
 
 const request = new CommonApi
@@ -66,9 +66,9 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
 
     if (brandNames || typeof category !== 'undefined' || typeof product !== 'undefined') {
         // 쿼리 문자열의 첫 번째 '&'를 '?'로 변경
-        fullURL = `${path}/search${fullURL.replace('&', '?')}`;
+        fullURL = `${path}/search${fullURL.replace('&', '?')}`
     } else {
-        fullURL = path;
+        fullURL = path
     }
 
     const response = await request.get(fullURL)
@@ -84,8 +84,8 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
 
 function addId() {
     if (categoryName.value !== null && !categoryNames.value.includes(categoryName.value)) {
-        categoryNames.value.push(categoryName.value);
-        categoryName.value = null;
+        categoryNames.value.push(categoryName.value)
+        categoryName.value = null
     }
 }
 
@@ -111,10 +111,10 @@ async function addBrand() {
 
 function onCheckboxChange(checkbox) {
     if (checkbox === 'na') {
-        this.checkedItems = ['na'];
+        this.checkedItems = ['na']
     } else if (checkbox === 'category' || checkbox === 'product') {
         if (this.checkedItems.includes('na')) {
-            this.checkedItems = [checkbox];
+            this.checkedItems = [checkbox]
         }
     }
 }
@@ -122,8 +122,14 @@ function onCheckboxChange(checkbox) {
 async function searchBrands() {
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
     const values: string[] = brandNames.value.replace(/,\s*$/, '').split(",")
-    // 각 값의 앞뒤 공백 제거
-    const bNames = values.map((value) => value.trim())
+
+    // 각 값의 앞뒤 공백 제거하고 중복 제거
+    const bNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
+
+    // 단어가 한 개만 들어오는 경우, 두 개로 복사하여 추가(백엔드 설계 결함)
+    if (bNames.length === 1) {
+        bNames.push(bNames[0])
+    }
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
@@ -156,16 +162,18 @@ async function updateBrand() {
     body.brand_name = newBrandName.value
     body = JSON.stringify(body)
 
-    const response = await request.update(fullURL, body);
-    await request.saveResult(path, response);
-
     newBrandName.value = ''
+
+    const response = await request.update(fullURL, body)
+    await request.saveResult(path, response)
+
+    getBrands() // brands 갱신
 }
 
 async function deleteId() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
-        deleteNames.value.push(deleteName.value);
-        deleteName.value = null;
+        deleteNames.value.push(deleteName.value)
+        deleteName.value = null
     }
 }
 
@@ -177,14 +185,25 @@ async function deleteBrand() {
     for (const el of IDs) {
         console.log(el)
         fullURL = `brand/${el}`
-        const response = await request.delete(fullURL);
-        await request.saveResult(path, response);
+        const response = await request.delete(fullURL)
+        await request.saveResult(path, response)
     }
 
     deleteNames.value = ''
     getBrands() // brands 갱신
 }
 
+// null 혹은 undefined 처리
+function getBrandName(brandId) {
+    const brand = this.brands.find((b) => b.brand_id === brandId);
+    return brand ? brand.brand_name : 'Unknown';
+}
+
+// null 혹은 undefined 처리
+function getCategoryName(categoryId) {
+    const category = this.categories.find((c) => c.category_id === categoryId);
+    return category ? category.category_name : 'Unknown';
+}
 
 onMounted(() => {
     getBrands()
@@ -288,12 +307,14 @@ onMounted(() => {
                         </template>
                         <div class="product-details">
                             <h3>{{ product.product_name }}</h3>
-                            <p>브랜드: {{
-                                brands.find((b) => b.brand_id === product.brand_id).brand_name }}</p>
+                            <p v-if="product.brand_id">
+                                브랜드: {{ getBrandName(product.brand_id) }}
+                            </p>
                             <p>성별: {{ product.sex }}</p>
                             <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
-                            <p>카테고리: {{
-                                categories.find((c) => c.category_id === product.category_id).category_name }}</p>
+                            <p v-if="product.category_id">
+                                카테고리: {{ getCategoryName(product.category_id) }}
+                            </p>
                             <p>판매량: {{ product.sales_quantity }}</p>
                         </div>
                     </div>
