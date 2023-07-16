@@ -34,6 +34,10 @@ const checkedItems = ref<string[]>([])
 const isProduct = ref<boolean>(false)
 const isBrand = ref<boolean>(false)
 
+const deleteNames = ref<string[]>([])
+const deleteName = ref<string | null>(null)
+
+
 
 
 async function getCategories(path: string = 'category', categoryNames?: string[], brand?: boolean, product?: boolean) {
@@ -125,6 +129,8 @@ async function addCategory() {
     brandNames.value = []
 
     await request.post(path, body)
+    getCategories() // categories 갱신
+
 }
 
 async function updateCategory() {
@@ -181,11 +187,33 @@ async function searchCategories() {
     }
 }
 
-function getRelativeImagePath(filePath) {
-    return '../../../backend_no-tag/' + filePath;
+function getImage(name: string) {
+    const path = `../../${name}`
+    return new URL(path, import.meta.url).href
 }
 
+async function deleteId() {
+    if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
+        deleteNames.value.push(deleteName.value);
+        deleteName.value = null;
+    }
+}
 
+async function deleteCategory() {
+    let fullURL: string = ''
+    const path = 'category'
+    const IDs = Object.values(deleteNames.value)
+
+    for (const el of IDs) {
+        console.log(el)
+        fullURL = `category/${el}`
+        const response = await request.delete(fullURL);
+        await request.saveResult(path, response);
+    }
+
+    deleteNames.value = ''
+    getCategories() // categories 갱신
+}
 
 onMounted(() => {
     if (!brands.value.length && !categories.value.length) {
@@ -260,6 +288,26 @@ onMounted(() => {
         </article>
 
 
+        <article class="delete">
+            <h3>Remove Category Name</h3>
+            <form @submit.prevent="deleteCategory">
+                <div class="menu">
+                    <select id="deleteSelect" v-model="deleteName">
+                        <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
+                            {{ category.category_name }}
+                        </option>
+                    </select>
+                    <button @click.prevent="deleteId">Add to delete</button>
+                </div>
+
+                <ul>
+                    <li v-for="id in deleteNames" :key="id">{{ id }}</li>
+                </ul>
+                <input class="button" type="submit" value="Delete Categories">
+            </form>
+        </article>
+
+
         <article class="list">
             <div v-if="isProduct">
                 <h2>Products</h2>
@@ -267,7 +315,7 @@ onMounted(() => {
                     <div v-for="product in products" :key="product.category_id" class="product-card">
                         <template v-if="product.file_paths && product.file_paths.length > 0">
                             <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                                <img :src="getRelativeImagePath(filePath)" alt="Product Image" class="product-image" />
+                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
                             </div>
                         </template>
                         <div class="product-details">
