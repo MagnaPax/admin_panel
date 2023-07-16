@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
@@ -7,9 +7,20 @@ import { useCounterStore } from '@/stores/counter';
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-// store의 값이 변경될때마다 적용
-const brands = computed(() => counterStore.brandList as { brand_id: number; brand_name: string; }[])
-const categories = computed(() => counterStore.categoryList as { category_id: number; category_name: string; }[])
+const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
+const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
+const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
+
+// store를 감시하고, 값이 변경될 때마다 변수 업데이트
+watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
+    brands.value = newBrandList
+})
+watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
+    categories.value = newCategoryList
+})
+watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
+    products.value = newProductList
+})
 
 const brandName = ref<string | null>(null)
 const brandNames = ref<string[]>([])
@@ -20,11 +31,22 @@ const deleteName = ref<string | null>(null)
 const deleteNames = ref<string[]>([])
 const updateID = ref<string | null>(null)
 const newBrandName = ref<string | null>(null)
+const isProduct = ref<boolean>(false)
+const isCategory = ref<boolean>(false)
 
 
 
 async function getCategories(path: string = 'category') {
-    await request.get(path)
+    const fullURL = path
+    const response = await request.get(fullURL)
+    // store에 저장
+    if (isProduct.value) {
+        await request.saveResult('product', response)
+    } else if (isCategory.value) {
+        await request.saveResult('category', response)
+    } else {
+        await request.saveResult(path, response)
+    }
 }
 
 async function getBrands(path: string = 'brand', brandNames?: string[], category?: boolean, product?: boolean) {
@@ -49,8 +71,15 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
         fullURL = path;
     }
 
-    const response = await request.get(fullURL);
-    await request.saveResult(path, response);
+    const response = await request.get(fullURL)
+    // store에 저장
+    if (isProduct.value) {
+        await request.saveResult('product', response)
+    } else if (isCategory.value) {
+        await request.saveResult('category', response)
+    } else {
+        await request.saveResult(path, response)
+    }
 }
 
 function addId() {
@@ -71,9 +100,12 @@ async function addBrand() {
     body = JSON.stringify(body)
 
     brandName.value = ''
-    categoryName.value = null;
+    categoryName.value = null
+    categoryNames.value = []
 
     await request.post(path, body)
+    getBrands() // brands 갱신
+
 }
 
 
@@ -99,12 +131,17 @@ async function searchBrands() {
 
 
     if (product && category) {
+        isProduct.value = true
+        isCategory.value = true
         await getBrands('brand', bNames, true, true)
     } else if (product) {
+        isProduct.value = true
         await getBrands('brand', bNames, undefined, true)
     } else if (category) {
+        isCategory.value = true
         await getBrands('brand', bNames, true)
     } else {
+        isProduct.value = false
         await getBrands('brand', bNames)
     }
 }
@@ -144,8 +181,10 @@ async function deleteBrand() {
         await request.saveResult(path, response);
     }
 
-    brandName.value = ''
+    deleteNames.value = ''
+    getBrands() // brands 갱신
 }
+
 
 onMounted(() => {
     getBrands()
@@ -238,9 +277,40 @@ onMounted(() => {
 
 
         <article class="list">
-            <ul>
-                <li v-for="(brand, i) in brands" :key="i">{{ brand.brand_name }}</li>
-            </ul>
+            <div v-if="isProduct">
+                <h2>Products</h2>
+                <div class="product-cards">
+                    <div v-for="product in products" :key="product.category_id" class="product-card">
+                        <template v-if="product.file_paths && product.file_paths.length > 0">
+                            <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
+                                <img :src="filePath" alt="Product Image" class="product-image" />
+                            </div>
+                        </template>
+                        <div class="product-details">
+                            <h3>{{ product.product_name }}</h3>
+                            <p>브랜드: {{
+                                brands.find((b) => b.brand_id === product.brand_id).brand_name }}</p>
+                            <p>성별: {{ product.sex }}</p>
+                            <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
+                            <p>카테고리: {{
+                                categories.find((c) => c.category_id === product.category_id).category_name }}</p>
+                            <p>판매량: {{ product.sales_quantity }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else-if="isCategory">
+                <h2>Categories</h2>
+                <ul>
+                    <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}</li>
+                </ul>
+            </div>
+            <div v-else>
+                <h2>Brands</h2>
+                <ul>
+                    <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}</li>
+                </ul>
+            </div>
         </article>
     </section>
 </template>
