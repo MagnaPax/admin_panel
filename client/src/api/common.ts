@@ -36,10 +36,9 @@ export default class CommonApi {
     }
   }
 
-  async get(path: string): Promise<void> {
+  async get(path: string): Promise<AxiosResponse<any, any>> {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.get(requestURL)
-    await this.saveResult(path, response)
     return response
   }
 
@@ -60,7 +59,6 @@ export default class CommonApi {
   async delete(path: string) {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.delete(requestURL)
-    await this.saveResult(path, response)
     return response
   }
 }
