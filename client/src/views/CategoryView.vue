@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
@@ -7,9 +7,20 @@ import { useCounterStore } from '@/stores/counter';
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-// store의 값이 변경될때마다 적용
-const brands = computed(() => counterStore.brandList as { brand_id: number; brand_name: string; }[])
-const categories = computed(() => counterStore.categoryList as { category_id: number; category_name: string; }[])
+const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
+const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
+const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
+
+// store를 감시하고, 값이 변경될 때마다 변수 업데이트
+watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
+    brands.value = newBrandList
+})
+watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
+    categories.value = newCategoryList
+})
+watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
+    products.value = newProductList
+})
 
 const brandName = ref<string | null>(null)
 const brandNames = ref<string[]>([])
@@ -18,10 +29,45 @@ const categoryName = ref<string | null>(null)
 const updateID = ref<string | null>(null)
 const newCategoryName = ref<string | null>(null)
 
+const categoryNames = ref<string[]>([])
+const checkedItems = ref<string[]>([])
+const isProduct = ref<boolean>(false)
+const isBrand = ref<boolean>(false)
 
 
-async function getCategories(path: string = 'category') {
-    await request.get(path)
+
+async function getCategories(path: string = 'category', categoryNames?: string[], brand?: boolean, product?: boolean) {
+    let fullURL: string = ''
+
+    if (categoryNames && categoryNames.length > 0) {
+        categoryNames.forEach((categoryName) => {
+            fullURL += `&category_name=${categoryName}`
+        })
+    }
+    if (typeof brand !== 'undefined') {
+        fullURL += `&brand=${brand}`
+    }
+    if (typeof product !== 'undefined') {
+        fullURL += `&product=${product}`
+    }
+
+    if (categoryNames || typeof brand !== 'undefined' || typeof product !== 'undefined') {
+        // 쿼리 문자열의 첫 번째 '&'를 '?'로 변경
+        fullURL = `${path}/search${fullURL.replace('&', '?')}`;
+    } else {
+        fullURL = path;
+    }
+
+
+    const response = await request.get(fullURL)
+    // store에 저장
+    if (isProduct.value) {
+        await request.saveResult('product', response)
+    } else if (isBrand.value) {
+        await request.saveResult('brand', response)
+    } else {
+        await request.saveResult(path, response)
+    }
 }
 
 async function getBrands(path: string = 'brand', brandNames?: string[], category?: boolean, product?: boolean) {
@@ -46,8 +92,15 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
         fullURL = path;
     }
 
-    const response = await request.get(fullURL);
-    await request.saveResult(path, response);
+    const response = await request.get(fullURL)
+    // store에 저장
+    if (isProduct.value) {
+        await request.saveResult('product', response)
+    } else if (isBrand.value) {
+        await request.saveResult('brand', response)
+    } else {
+        await request.saveResult(path, response)
+    }
 }
 
 function addId() {
@@ -91,9 +144,46 @@ async function updateCategory() {
 
 }
 
+function onCheckboxChange(checkbox) {
+    if (checkbox === 'na') {
+        this.checkedItems = ['na'];
+    } else if (checkbox === 'brand' || checkbox === 'product') {
+        if (this.checkedItems.includes('na')) {
+            this.checkedItems = [checkbox];
+        }
+    }
+}
 
+async function searchCategories() {
+    // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
+    const values: string[] = categoryNames.value.replace(/,\s*$/, '').split(",")
+    // 각 값의 앞뒤 공백 제거
+    const cNames = values.map((value) => value.trim())
 
+    const tables = Object.values(checkedItems.value)
+    const product = tables.includes('product')
+    const brand = tables.includes('brand')
 
+    if (product && brand) {
+        isProduct.value = true
+        isBrand.value = true
+        await getCategories('category', cNames, true, true)
+    } else if (product) {
+        isProduct.value = true
+        await getCategories('category', cNames, undefined, true)
+    } else if (brand) {
+        isProduct.value = false
+        isBrand.value = true
+        await getCategories('category', cNames, true)
+    } else {
+        isProduct.value = false
+        await getCategories('category', cNames)
+    }
+}
+
+function getRelativeImagePath(filePath) {
+    return '../../../backend_no-tag/' + filePath;
+}
 
 
 
@@ -149,14 +239,62 @@ onMounted(() => {
         </article>
 
 
+        <article class="search">
+            <h3>Look Up Category Names</h3>
+            <form @submit.prevent="searchCategories">
+                <input class="input" type="text" v-model="categoryNames" placeholder="name, name, ...">
+
+                <input id="ch_na" type="checkbox" v-model="checkedItems" value="na" @change="onCheckboxChange('na')" />
+                <label for="ch_na">N/A</label>
+
+                <input id="ch_brand" type="checkbox" v-model="checkedItems" value="brand"
+                    @change="onCheckboxChange('brand')" />
+                <label for="ch_brand">For the brands</label>
+
+                <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
+                    @change="onCheckboxChange('product')" />
+                <label for="ch_product">For the products</label>
+
+                <input class="button" type="submit" value="Submit" :disabled="categoryNames.length === 0">
+            </form>
+        </article>
+
+
         <article class="list">
-            <ul>
-                <li v-for="(category, i) in categories" :key="i">{{ category.category_name }}</li>
-            </ul>
-            <br><br>
-            <ul>
-                <li v-for="(brand, i) in brands" :key="i">{{ brand.brand_name }}</li>
-            </ul>
+            <div v-if="isProduct">
+                <h2>Products</h2>
+                <div class="product-cards">
+                    <div v-for="product in products" :key="product.category_id" class="product-card">
+                        <template v-if="product.file_paths && product.file_paths.length > 0">
+                            <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
+                                <img :src="getRelativeImagePath(filePath)" alt="Product Image" class="product-image" />
+                            </div>
+                        </template>
+                        <div class="product-details">
+                            <h3>{{ product.product_name }}</h3>
+                            <p>브랜드: {{
+                                brands.find((b) => b.brand_id === product.brand_id).brand_name }}</p>
+                            <p>성별: {{ product.sex }}</p>
+                            <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
+                            <p>카테고리: {{
+                                categories.find((c) => c.category_id === product.category_id).category_name }}</p>
+                            <p>판매량: {{ product.sales_quantity }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div v-else-if="isBrand">
+                <h2>Brands</h2>
+                <ul>
+                    <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}</li>
+                </ul>
+            </div>
+            <div v-else>
+                <h2>Categories</h2>
+                <ul>
+                    <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}</li>
+                </ul>
+            </div>
         </article>
     </section>
 </template>
