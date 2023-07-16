@@ -1,9 +1,22 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
 </script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+  <section class="information">
+    <article>
+      <div>한천희</div>
+      <div>chunhee.han@outlook.com</div>
+    </article>
+  </section>
 </template>
+
+<style scoped>
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+</style>
