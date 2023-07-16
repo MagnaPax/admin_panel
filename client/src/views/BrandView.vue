@@ -18,6 +18,8 @@ const categoryNames = ref<string[]>([])
 const checkedItems = ref<string[]>([])
 const deleteName = ref<string | null>(null)
 const deleteNames = ref<string[]>([])
+const updateID = ref<string | null>(null)
+const newBrandName = ref<string | null>(null)
 
 
 
@@ -107,6 +109,22 @@ async function searchBrands() {
     }
 }
 
+async function updateBrand() {
+    let fullURL: string = ''
+    const path = 'brand'
+    let body: any = {}
+
+    fullURL = `${path}/${updateID.value}`
+
+    body.brand_name = newBrandName.value
+    body = JSON.stringify(body)
+
+    const response = await request.update(fullURL, body);
+    await request.saveResult(path, response);
+
+    newBrandName.value = ''
+}
+
 async function deleteId() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
         deleteNames.value.push(deleteName.value);
@@ -140,11 +158,10 @@ onMounted(() => {
         <article class="create">
             <h3>Add a new brand name</h3>
             <form @submit.prevent="addBrand">
-                <label for="categorySelect">Select Relative Category</label>
+                <label for="categorySelect">Select Relative Category with the brand</label>
                 <div class="menu">
                     <select id="categorySelect" v-model="categoryName">
-                        <option v-for="(category, i) in categories" :key="i" :value="category.category_id"
-                            placeholder="Select Relative Category">
+                        <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
                     </select>
@@ -160,6 +177,24 @@ onMounted(() => {
                 <input class="button" type="submit" value="Create Brand">
             </form>
         </article>
+
+
+        <article class="update">
+            <h3>Update Brand Name</h3>
+            <form @submit.prevent="updateBrand">
+                <div class="menu">
+                    <select id="updateSelect" v-model="updateID">
+                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
+                            {{ brand.brand_name }}
+                        </option>
+                    </select>
+                    TO
+                </div>
+                <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
+                <input class="button" type="submit" value="Update Brand">
+            </form>
+        </article>
+
 
         <article class="search">
             <h3>Look Up Brand Names</h3>
@@ -181,13 +216,13 @@ onMounted(() => {
             </form>
         </article>
 
+
         <article class="delete">
             <h3>Remove Brand Name</h3>
             <form @submit.prevent="deleteBrand">
                 <div class="menu">
                     <select id="deleteSelect" v-model="deleteName">
-                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id"
-                            placeholder="Select Relative Category">
+                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
@@ -200,6 +235,7 @@ onMounted(() => {
                 <input class="button" type="submit" value="Delete Brands">
             </form>
         </article>
+
 
         <article class="list">
             <ul>

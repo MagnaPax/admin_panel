@@ -50,6 +50,13 @@ export default class CommonApi {
     return response.data
   }
 
+  async update(path: string, body: object) {
+    const requestURL = this.settingURL(path)
+    const response = await this.axiosInstance.patch(requestURL, body)
+    console.log('바꾼 결과:', JSON.stringify(response.data))
+    return response.data
+  }
+
   async delete(path: string) {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.delete(requestURL)
