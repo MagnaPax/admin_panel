@@ -22,6 +22,14 @@ watch(() => counterStore.productList, (newProductList: { product_id: number; pro
     products.value = newProductList
 })
 
+const inputName = ref('')
+const selectedSex = ref('')
+const inputQty = ref(0)
+const selectedKidType = ref('')
+const selectedBrand = ref('')
+const selectedCategory = ref('')
+const selectedFiles = ref([''])
+
 
 
 async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys: number[]) {
@@ -123,7 +131,42 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     await request.saveResult(path, response) // store에 저장
 }
 
+async function addProduct() {
+    const path = 'product'
 
+    const newProduct = {
+        product_name: inputName.value,
+        brand_id: selectedBrand.value,
+        category_id: selectedCategory.value,
+        sex: selectedSex.value,
+        is_kids: selectedKidType.value === 'children',
+        sales_quantity: inputQty.value
+    };
+
+    await request.post(path, newProduct)
+    getProducts() // products 갱신
+}
+
+function handleFileSelection(event) {
+    const files = event.target.files;
+    // 여러 개의 파일 선택 시, 기존에 선택한 파일 배열에 추가
+    for (let i = 0; i < files.length; i++) {
+        this.selectedFiles.push(files[i]);
+    }
+}
+
+
+// null 혹은 undefined 처리
+function getBrandName(brandId) {
+    const brand = this.brands.find((b) => b.brand_id === brandId);
+    return brand ? brand.brand_name : 'Unknown';
+}
+
+// null 혹은 undefined 처리
+function getCategoryName(categoryId) {
+    const category = this.categories.find((c) => c.category_id === categoryId);
+    return category ? category.category_name : 'Unknown';
+}
 
 onMounted(() => {
     if (!brands.value.length && !categories.value.length && !products.value.length) {
@@ -136,6 +179,58 @@ onMounted(() => {
 
 <template>
     <section class="wrapper">
+        <article class="create">
+            <h3>Add a new Product</h3>
+            <form @submit.prevent="addProduct">
+                <div class="input-container">
+                    <input class="input" type="text" placeholder="제품이름" v-model="inputName">
+                </div>
+                <div class="input-container">
+                    <input class="input" type="radio" name="sex" value="남" v-model="selectedSex">남
+                    <input class="input" type="radio" name="sex" value="여" v-model="selectedSex">여
+                    <input class="input" type="radio" name="sex" value="공용" v-model="selectedSex">공용
+                </div>
+                <div class="input-container">
+                    <input class="input" type="number" placeholder="판매량" min="1" v-model="inputQty">
+                </div>
+                <div class="input-container">
+                    <input class="input" type="radio" name="kid" value="children" v-model="selectedKidType">아동용
+                    <input class="input" type="radio" name="kid" value="adults" v-model="selectedKidType">성인용
+                </div>
+
+                <div class="menu">
+                    <select id="brandSelect" v-model="selectedBrand">
+                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
+                            {{ brand.brand_name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="menu">
+                    <select id="categorySelect" v-model="selectedCategory">
+                        <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
+                            {{ category.category_name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="input-container">
+                    <input class="input" type="file" accept="image/*" multiple @change="handleFileSelection">
+                    <div v-if="selectedFiles.length > 0">
+                        <h4>선택한 파일:</h4>
+                        <ul>
+                            <li v-for="file in selectedFiles" :key="file.name">{{ file.name }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <input class="button" type="submit" value="Create Product" :disabled="inputName.length === 0">
+            </form>
+        </article>
+
+
+
+
+
+
+
         <article class="list">
             <h2>Products</h2>
             <div class="product-cards">
@@ -147,13 +242,13 @@ onMounted(() => {
                     </template>
                     <div class="product-details">
                         <h3>{{ product.product_name }}</h3>
-                        <p v-if="product.brand_id !== null">
-                            브랜드: {{ brands.find((b) => b.brand_id === product.brand_id).brand_name }}
+                        <p v-if="product.brand_id">
+                            브랜드: {{ getBrandName(product.brand_id) }}
                         </p>
                         <p>성별: {{ product.sex }}</p>
                         <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
-                        <p v-if="product.category_id !== null">
-                            카테고리: {{ categories.find((c) => c.category_id === product.category_id).category_name }}
+                        <p v-if="product.category_id">
+                            카테고리: {{ getCategoryName(product.category_id) }}
                         </p>
                         <p>판매량: {{ product.sales_quantity }}</p>
                     </div>
