@@ -25,11 +25,28 @@ watch(() => counterStore.productList, (newProductList: { product_id: number; pro
 const inputName = ref('')
 const selectedSex = ref('')
 const inputQty = ref(0)
-const selectedKidType = ref('')
+const selectedKidType = ref<boolean>()
 const selectedBrand = ref('')
 const selectedCategory = ref('')
 const selectedFiles = ref([''])
+const selectedkey = ref('')
+const selectedBrands = ref(0)
+const selectedCategories = ref(0)
 
+const updateID = ref<string | null>(null)
+const productName = ref<string | null>(null)
+const productNames = ref<string[]>([])
+
+const searchWords = ref<string[]>([])
+
+const structureProduct = ['product_name', 'brand', 'category', 'sex', 'kid', 'sales_qty']
+
+let searchProductNames = ref<string[]>([])
+let searchBrandIDs: number[] = []
+let searchCategoryIDs: number[] = []
+let searchSexes: string[] = []
+let searchKids: boolean[] = []
+let searchQtys: number[] = []
 
 
 async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys: number[]) {
@@ -139,7 +156,7 @@ async function addProduct() {
         brand_id: selectedBrand.value,
         category_id: selectedCategory.value,
         sex: selectedSex.value,
-        is_kids: selectedKidType.value === 'children',
+        is_kids: selectedKidType.value,
         sales_quantity: inputQty.value
     };
 
@@ -153,6 +170,44 @@ function handleFileSelection(event) {
     for (let i = 0; i < files.length; i++) {
         this.selectedFiles.push(files[i]);
     }
+}
+
+function addValue() {
+    let values: string[] = []
+    switch (selectedkey.value) {
+        case 'product_name':
+            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value) => value.trim())
+            searchProductNames.value.push(...values)
+            searchWords.value = ''
+            break;
+        case 'brand':
+            searchBrandIDs.push(selectedBrands.value)
+            selectedBrands.value = 0
+            break;
+        case 'category':
+            searchCategoryIDs.push(selectedCategories.value)
+            selectedCategories.value = 0
+            break;
+        case 'sex':
+            searchSexes.push(selectedSex.value)
+            selectedSex.value = ''
+            break;
+        case 'kid':
+            searchKids.push(selectedKidType.value)
+            selectedKidType.value = undefined
+            break;
+        case 'sales_qty':
+            searchQtys.push(inputQty.value)
+            inputQty.value = 0
+            break;
+
+        default:
+            break;
+    }
+}
+
+async function searchProducts() {
+    await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
 }
 
 
@@ -194,8 +249,8 @@ onMounted(() => {
                     <input class="input" type="number" placeholder="판매량" min="1" v-model="inputQty">
                 </div>
                 <div class="input-container">
-                    <input class="input" type="radio" name="kid" value="children" v-model="selectedKidType">아동용
-                    <input class="input" type="radio" name="kid" value="adults" v-model="selectedKidType">성인용
+                    <input class="input" type="radio" name="kid" value="true" v-model="selectedKidType">아동용
+                    <input class="input" type="radio" name="kid" value="false" v-model="selectedKidType">성인용
                 </div>
 
                 <div class="menu">
@@ -221,10 +276,67 @@ onMounted(() => {
                         </ul>
                     </div>
                 </div>
-                <input class="button" type="submit" value="Create Product" :disabled="inputName.length === 0">
+                <input class="button" type="submit" value="Create Product"
+                    :disabled="inputName.length === 0 || selectedBrand.length === 0 || selectedCategory.length === 0">
             </form>
         </article>
 
+
+        <article class="search">
+            <h3>Look Up Product Names</h3>
+            <form @submit.prevent="searchProducts">
+                <div>찾을 목록 선택</div>
+                <div class="menu">
+                    <select id="keySelect" v-model="selectedkey">
+                        <option v-for="(key, i) in structureProduct" :key="i" :value="key">
+                            {{ key }}
+                        </option>
+                    </select>
+                </div>
+                <div>검색 단어 입력 OR 선택</div>
+                <div v-if="selectedkey === 'product_name'">
+                    <input class="input" type="text" v-model="searchWords" placeholder="찾을 단어">
+                </div>
+                <div v-else-if="selectedkey === 'brand'">
+                    <div class="menu">
+                        <select id="brandSelect" v-model="selectedBrands">
+                            <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
+                                {{ brand.brand_name }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div v-else-if="selectedkey === 'category'">
+                    <div class="menu">
+                        <select id="categorySelect" v-model="selectedCategories">
+                            <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
+                                {{ category.category_name }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div v-else-if="selectedkey === 'sex'">
+                    <div class="input-container">
+                        <input class="input" type="radio" name="sex" value="남" v-model="selectedSex">남
+                        <input class="input" type="radio" name="sex" value="여" v-model="selectedSex">여
+                        <input class="input" type="radio" name="sex" value="공용" v-model="selectedSex">공용
+                    </div>
+                </div>
+                <div v-else-if="selectedkey === 'kid'">
+                    <div class="input-container">
+                        <input class="input" type="radio" name="kid" value="true" v-model="selectedKidType">아동용
+                        <input class="input" type="radio" name="kid" value="false" v-model="selectedKidType">성인용
+                    </div>
+                </div>
+                <div v-else-if="selectedkey === 'sales_qty'">
+                    <div class="input-container">
+                        <input class="input" type="number" placeholder="판매량" min="1" v-model="inputQty">
+                    </div>
+                </div>
+                <button @click.prevent="addValue()">Add</button>
+                <input class="button" type="submit" value="검색" :disabled="searchProductNames.length === 0">
+            </form>
+        </article>
 
 
 
