@@ -3,13 +3,13 @@ import { RouterView } from 'vue-router'
 
 import Header from './components/Header.vue'
 import Footer from '@/components/Footer.vue'
-import Navigation from '@/components/Navigation.vue'
+import SideBar from '@/components/SideBar.vue'
 </script>
 
 <template>
   <body>
     <Header />
-    <Navigation />
+    <SideBar />
     <main>
       <RouterView />
     </main>
