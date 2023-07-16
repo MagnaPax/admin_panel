@@ -48,7 +48,29 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     await request.saveResult(path, response);
 }
 
+function addId() {
+    if (brandName.value !== null && !brandNames.value.includes(brandName.value)) {
+        brandNames.value.push(brandName.value);
+        brandName.value = null;
+    }
+}
 
+async function addCategory() {
+    const path = 'category'
+    let body: any = {}
+    const IDs = Object.values(brandNames.value)
+
+    body.category_name = categoryName.value
+    if (IDs.length > 0) body.brand_ids = IDs
+
+    body = JSON.stringify(body)
+
+    categoryName.value = ''
+    brandName.value = null
+    brandNames.value = []
+
+    await request.post(path, body)
+}
 
 onMounted(() => {
     if (!brands.value.length && !categories.value.length) {
@@ -61,6 +83,30 @@ onMounted(() => {
 
 <template>
     <section class="wrapper">
+        <article class="create">
+            <h3>Add a new category name</h3>
+            <form @submit.prevent="addCategory">
+                <label for="brandSelect">Select Relative Brand with the Category</label>
+                <div class="menu">
+                    <select id="brandSelect" v-model="brandName">
+                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
+                            {{ brand.brand_name }}
+                        </option>
+                    </select>
+                    <button @click.prevent="addId">Add</button>
+                </div>
+
+                <div class="inputted_brand">
+                    <ul>
+                        <li v-for="id in brandNames" :key="id">{{ id }}</li>
+                    </ul>
+                </div>
+                <input class="input" type="text" v-model="categoryName" placeholder="Input Category name">
+                <input class="button" type="submit" value="Create Category">
+            </form>
+        </article>
+
+
         <article class="list">
             <ul>
                 <li v-for="(category, i) in categories" :key="i">{{ category.category_name }}</li>
