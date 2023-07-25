@@ -28,7 +28,9 @@ const inputQty = ref(0)
 const selectedKidType = ref<boolean>()
 const selectedBrand = ref('')
 const selectedCategory = ref('')
-const selectedFiles = ref([''])
+const selectedFiles = ref<File[]>([])
+const selectedFileError = ref({ isOverSized: false, isOverNumbers: false })
+
 const selectedkey = ref('')
 const selectedBrands = ref(0)
 const selectedCategories = ref(0)
@@ -151,26 +153,20 @@ async function addProduct() {
         category_id: selectedCategory.value,
         sex: selectedSex.value,
         is_kids: selectedKidType.value,
-        sales_quantity: inputQty.value
-    };
+        sales_quantity: inputQty.value,
+        file_paths: selectedFiles.value
+    }
 
     await request.post(path, newProduct)
     getProducts() // products 갱신
 }
 
-function handleFileSelection(event) {
-    const files = event.target.files;
-    // 여러 개의 파일 선택 시, 기존에 선택한 파일 배열에 추가
-    for (let i = 0; i < files.length; i++) {
-        this.selectedFiles.push(files[i]);
-    }
-}
 
 function addValue() {
     let values: string[] = []
     switch (selectedkey.value) {
         case 'product_name':
-            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value) => value.trim())
+            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
             searchProductNames.value.push(...values)
             searchWords.value = ''
             break;
@@ -206,16 +202,43 @@ async function searchProducts() {
 
 
 // null 혹은 undefined 처리
-function getBrandName(brandId) {
-    const brand = this.brands.find((b) => b.brand_id === brandId);
+function getBrandName(this: any, brandId: any) {
+    const brand = this.brands.find((b: { brand_id: any; }) => b.brand_id === brandId);
     return brand ? brand.brand_name : 'Unknown';
 }
 
 // null 혹은 undefined 처리
-function getCategoryName(categoryId) {
-    const category = this.categories.find((c) => c.category_id === categoryId);
+function getCategoryName(this: any, categoryId: any) {
+    const category = this.categories.find((c: { category_id: any; }) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
 }
+
+
+function accumulateList(e: any) {
+    selectedFileError.value.isOverNumbers = false
+    selectedFileError.value.isOverSized = false
+
+    const files = e.target.files ? e.target.files : null
+    const mergedFiles = [...selectedFiles.value, ...files]
+
+    if (mergedFiles.length > 3) {
+        console.error('파일 갯수가 3개보다 많다');
+        selectedFileError.value.isOverNumbers = true;
+        return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        if (file.size > 1000000) {
+            console.error('파일 크기가 1MB 넘는 파일이 있다')
+            selectedFileError.value.isOverSized = true
+            return;
+        }
+    }
+
+    selectedFiles.value = mergedFiles
+}
+
 
 onMounted(() => {
     if (!brands.value.length && !categories.value.length && !products.value.length) {
@@ -261,8 +284,12 @@ onMounted(() => {
                         </option>
                     </select>
                 </div>
+
                 <div class="input-container">
-                    <input class="input" type="file" accept="image/*" multiple @change="handleFileSelection">
+                    <input class="input" type="file" name="inputtedImg" accept="image/*" @change="accumulateList" max="3"
+                        multiple>
+                    <span v-if="selectedFileError.isOverSized">선택한 파일 중 1MB를 초과하는 파일이 있습니다.</span>
+                    <span v-if="selectedFileError.isOverNumbers">최대 3개의 파일까지 저장 가능합니다.</span>
                     <div v-if="selectedFiles.length > 0">
                         <h4>선택한 파일:</h4>
                         <ul>
@@ -270,6 +297,7 @@ onMounted(() => {
                         </ul>
                     </div>
                 </div>
+
                 <input class="button" type="submit" value="Create Product"
                     :disabled="inputName.length === 0 || selectedBrand.length === 0 || selectedCategory.length === 0">
             </form>
@@ -362,6 +390,11 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.wrapper {
+    color: #fff;
+    background-color: #333;
+}
+
 .product-wrapper {
     display: flex;
     flex-direction: column;
