@@ -25,12 +25,12 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post('uploads')
-  @UseInterceptors(FilesInterceptor('files', 3, multerOptions))
+  @UseInterceptors(FilesInterceptor('imgs', 3, multerOptions))
   async createDatas(
-    @UploadedFiles() files: Express.Multer.File[],
+    @UploadedFiles() imgs: Express.Multer.File[],
     @Body() data: MakeProductDto,
   ) {
-    return this.productService.createProduct(files, data.data);
+    return this.productService.createProduct(imgs, data.data);
   }
 
   @Post()
