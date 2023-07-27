@@ -1,6 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ path: '.env.local' });
 
 export function ormConfig(): TypeOrmModuleOptions {
   const commonConf = {
