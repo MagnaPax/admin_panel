@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
@@ -7,20 +7,11 @@ import { useCounterStore } from '@/stores/counter';
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
-const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
-const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
 
 // store를 감시하고, 값이 변경될 때마다 변수 업데이트
-watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
-    brands.value = newBrandList
-})
-watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
-    categories.value = newCategoryList
-})
-watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
-    products.value = newProductList
-})
+const brands = computed(() => counterStore.brandList)
+const categories = computed(() => counterStore.categoryList)
+const products = computed(() => counterStore.productList)
 
 const inputName = ref('')
 const selectedSex = ref('')
