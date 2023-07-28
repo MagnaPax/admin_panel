@@ -45,7 +45,7 @@ let searchKids: boolean[] = []
 let searchQtys: number[] = []
 
 
-async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys: number[]) {
+async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys?: number[]) {
     let fullURL: string = ''
 
     if (productNames && productNames.length > 0) {
@@ -154,11 +154,22 @@ async function addProduct() {
         sex: selectedSex.value,
         is_kids: selectedKidType.value,
         sales_quantity: inputQty.value,
-        file_paths: selectedFiles.value
+        file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
+
     }
 
-    await request.post(path, newProduct)
-    getProducts() // products 갱신
+    try {
+        // 서버로 제품 추가 요청 보내기
+        await request.post(path, newProduct)
+
+        // 성공적으로 추가되면, 선택된 파일들 초기화
+        selectedFiles.value = []
+
+        // products 갱신
+        getProducts()
+    } catch (error) {
+        console.error('제품 추가 중 에러 발생', error)
+    }
 }
 
 
@@ -239,6 +250,10 @@ function accumulateList(e: any) {
     selectedFiles.value = mergedFiles
 }
 
+function getImage(fileName: string) {
+    const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
+    return path
+}
 
 onMounted(() => {
     if (!brands.value.length && !categories.value.length && !products.value.length) {
@@ -253,7 +268,7 @@ onMounted(() => {
     <section class="wrapper">
         <article class="create">
             <h3>Add a new Product</h3>
-            <form @submit.prevent="addProduct">
+            <form @submit.prevent="addProduct" method="post" enctype="multipart/form-data">
                 <div class="input-container">
                     <input class="input" type="text" placeholder="제품이름" v-model="inputName">
                 </div>
@@ -263,11 +278,11 @@ onMounted(() => {
                     <input class="input" type="radio" name="sex" value="공용" v-model="selectedSex">공용
                 </div>
                 <div class="input-container">
-                    <input class="input" type="number" placeholder="판매량" min="1" v-model="inputQty">
+                    <input class="input" type="number" min="1" v-model="inputQty">
                 </div>
                 <div class="input-container">
-                    <input class="input" type="radio" name="kid" value="true" v-model="selectedKidType">아동용
-                    <input class="input" type="radio" name="kid" value="false" v-model="selectedKidType">성인용
+                    <input class="input" type="radio" name="kid" :value="true" v-model="selectedKidType">아동용
+                    <input class="input" type="radio" name="kid" :value="false" v-model="selectedKidType">성인용
                 </div>
 
                 <div class="menu">
@@ -286,8 +301,7 @@ onMounted(() => {
                 </div>
 
                 <div class="input-container">
-                    <input class="input" type="file" name="inputtedImg" accept="image/*" @change="accumulateList" max="3"
-                        multiple>
+                    <input class="input" type="file" name="imgs" accept="image/*" @change="accumulateList" max="3" multiple>
                     <span v-if="selectedFileError.isOverSized">선택한 파일 중 1MB를 초과하는 파일이 있습니다.</span>
                     <span v-if="selectedFileError.isOverNumbers">최대 3개의 파일까지 저장 가능합니다.</span>
                     <div v-if="selectedFiles.length > 0">
@@ -368,7 +382,7 @@ onMounted(() => {
                 <div v-for="product in products" :key="product.category_id" class="product-card">
                     <template v-if="product.file_paths && product.file_paths.length > 0">
                         <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                            <img :src="filePath" alt="Product Image" class="product-image" />
+                            <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
                         </div>
                     </template>
                     <div class="product-details">
