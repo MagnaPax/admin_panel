@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, computed } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
@@ -25,7 +25,7 @@ const selectedFileError = ref({ isOverSized: false, isOverNumbers: false })
 const selectedkey = ref('')
 const selectedBrands = ref(0)
 const selectedCategories = ref(0)
-const searchWords = ref<string[]>([])
+const searchWords = ref('')
 const structureProduct = ['product_name', 'brand', 'category', 'sex', 'kid', 'sales_qty']
 
 let searchProductNames = ref<string[]>([])
@@ -146,7 +146,6 @@ async function addProduct() {
         is_kids: selectedKidType.value,
         sales_quantity: inputQty.value,
         file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
-
     }
 
     try {
@@ -162,7 +161,6 @@ async function addProduct() {
         console.error('제품 추가 중 에러 발생', error)
     }
 }
-
 
 function addValue() {
     let values: string[] = []
@@ -185,8 +183,10 @@ function addValue() {
             selectedSex.value = ''
             break;
         case 'kid':
-            searchKids.push(selectedKidType.value)
-            selectedKidType.value = undefined
+            if (selectedKidType.value !== undefined) {
+                searchKids.push(selectedKidType.value)
+                selectedKidType.value = undefined
+            }
             break;
         case 'sales_qty':
             searchQtys.push(inputQty.value)
@@ -200,6 +200,7 @@ function addValue() {
 
 async function searchProducts() {
     await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
+    searchProductNames.value = []
 }
 
 
