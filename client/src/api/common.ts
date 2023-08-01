@@ -1,5 +1,5 @@
-import axios, { type AxiosResponse } from 'axios'
-import { setInterceptors } from './interceptors'
+import axios, { type AxiosError, type AxiosResponse } from 'axios'
+import { setInterceptors, handleErrorResponse } from './interceptors'
 import { useCounterStore } from '@/stores/counter'
 
 export default class CommonApi {
@@ -36,10 +36,21 @@ export default class CommonApi {
     }
   }
 
-  async get(path: string): Promise<AxiosResponse<any, any>> {
+  async getOrigin(path: string): Promise<AxiosResponse<any, any>> {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.get(requestURL)
     return response
+  }
+
+  async get<D = any>(path: string): Promise<AxiosResponse<D>> {
+    const requestURL = this.settingURL(path)
+
+    try {
+      const response = await this.axiosInstance.get<AxiosResponse<D>>(requestURL)
+      return response.data // AxiosResponse 객체에서 응답 데이터만 반환
+    } catch (error) {
+      return Promise.reject(handleErrorResponse(error as AxiosError))
+    }
   }
 
   async post(path: string, body: object) {
