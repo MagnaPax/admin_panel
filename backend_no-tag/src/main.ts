@@ -3,10 +3,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { AllExceptionFilter } from './exceptions/exception.filter';
 
 async function bootstrap() {
   // const app = await NestFactory.create(AppModule);
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // 전역으로 예외처리
+  app.useGlobalFilters(new AllExceptionFilter());
 
   // static 파일 제공 설정
   app.useStaticAssets(join(__dirname, '..', 'storage'), {
