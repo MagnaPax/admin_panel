@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { NoQueryDeliveredException } from 'src/exceptions/custom-exception';
 
 export class SearchBrandDto {
   @IsString({ each: true })
@@ -13,7 +14,7 @@ export class SearchBrandDto {
   @IsNotEmpty({ each: true }) // 각 요소에 대해 검증
   @Transform(({ value }) => {
     if (value.includes('undefined') || value.includes('null')) {
-      throw new Error('No query delivered');
+      throw new NoQueryDeliveredException();
     }
     return value;
   })

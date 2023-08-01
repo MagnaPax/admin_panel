@@ -5,13 +5,17 @@ import { Query } from 'src/queryHelper';
 
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
-import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 import { SearchBrandDto } from './dto/search-brand.dto';
 
 import { Brand } from './entities/brand.entity';
 import { Category } from 'src/category/entities/category.entity';
 import { Intermediate } from 'src/intermediate.entity';
 import { Product } from 'src/product/entities/product.entity';
+
+import {
+  BrandDuplicatedException,
+  BrandNotFoundException,
+} from 'src/exceptions/custom-exception';
 
 @Injectable()
 export class BrandService {
@@ -35,7 +39,8 @@ export class BrandService {
       ['brand_name'],
       this.brandRepository,
     );
-    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
+
+    if (isDuplicated.length !== 0) throw new BrandDuplicatedException();
 
     // 브랜드 추가
     const newBrand = await this.brandRepository.save(createBrandDto);
@@ -77,52 +82,6 @@ export class BrandService {
       );
 
       await this.intermediateRepository.remove(nullBrandIds);
-    }
-
-    return newBrand;
-  }
-
-  // async create2(createBrandDto: CreateBrandDto): Promise<Brand> {
-  async create2(createBrandDto: any): Promise<Brand> {
-    // 브랜드 이름이 중복되지 않게
-    const isDuplicated = await this.query.findRecordsByValues(
-      [`${createBrandDto.brand_name}`],
-      ['brand_name'],
-      this.brandRepository,
-    );
-    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
-
-    // 브랜드 추가
-    const newBrand = await this.brandRepository.save(createBrandDto);
-
-    // 중간 테이블에 추가
-    const intermediate: CreateIntermediateDto = {
-      brand_id: newBrand.brand_id,
-      category_id: createBrandDto.category_id,
-    };
-    await this.intermediateRepository.save(intermediate);
-
-    // 중간 테이블에서 중복되는 brand_id들 정리
-    if (
-      createBrandDto.category_id !== null &&
-      createBrandDto.category_id !== undefined
-    ) {
-      const sameCategories = await this.query.findRecordsByValues(
-        [`${newBrand.category_id}`],
-        ['category_id'],
-        this.intermediateRepository,
-      );
-
-      // 중간 테이블에 지금 입력한 category_id와 값을 가진 레코드가 있다면 null로 바꾼 뒤 삭제
-      if (sameCategories.length > 1) {
-        const nullRecords = sameCategories.filter((el) => el.brand_id === null);
-
-        for (const el of nullRecords) {
-          el.category_id = null;
-          await this.intermediateRepository.save(el);
-        }
-        await this.intermediateRepository.remove(nullRecords);
-      }
     }
 
     return newBrand;
@@ -201,9 +160,8 @@ export class BrandService {
 
   async update(brand_id: number, updateBrandDto: UpdateBrandDto) {
     const brand = await this.findOne(brand_id);
-    if (!brand) {
-      throw new Error('Not found the brand');
-    }
+    if (!brand) throw new BrandNotFoundException();
+
     Object.assign(brand, updateBrandDto);
     return await this.brandRepository.save(brand);
   }
@@ -215,7 +173,7 @@ export class BrandService {
       this.brandRepository,
     );
 
-    if (!brands) throw new Error('Not found the brand');
+    if (brands.length == 0) throw new BrandNotFoundException();
 
     // Intermediate 엔티티 수정
     await this.intermediateRepository
