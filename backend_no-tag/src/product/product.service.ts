@@ -101,7 +101,7 @@ export class ProductService {
   }
 
   async createProduct(
-    files: Express.Multer.File[],
+    imgs: Express.Multer.File[],
     data: CreateProductDto,
   ): Promise<Product> {
     // 중간 테이블 업데이트
@@ -109,7 +109,7 @@ export class ProductService {
 
     // 파일 처리
     const filePaths: string[] = [];
-    files.forEach((file) => filePaths.push(file.path));
+    imgs.forEach((img) => filePaths.push(img.path));
 
     // 파일 경로 추가
     data['file_paths'] = filePaths;

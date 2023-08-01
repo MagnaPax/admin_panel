@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter';
 
@@ -7,20 +7,11 @@ import { useCounterStore } from '@/stores/counter';
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
-const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
-const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
 
 // store를 감시하고, 값이 변경될 때마다 변수 업데이트
-watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
-    brands.value = newBrandList
-})
-watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
-    categories.value = newCategoryList
-})
-watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
-    products.value = newProductList
-})
+const brands = computed(() => counterStore.brandList)
+const categories = computed(() => counterStore.categoryList)
+const products = computed(() => counterStore.productList)
 
 const inputName = ref('')
 const selectedSex = ref('')
@@ -28,11 +19,13 @@ const inputQty = ref(0)
 const selectedKidType = ref<boolean>()
 const selectedBrand = ref('')
 const selectedCategory = ref('')
-const selectedFiles = ref([''])
+const selectedFiles = ref<File[]>([])
+const selectedFileError = ref({ isOverSized: false, isOverNumbers: false })
+
 const selectedkey = ref('')
 const selectedBrands = ref(0)
 const selectedCategories = ref(0)
-const searchWords = ref<string[]>([])
+const searchWords = ref('')
 const structureProduct = ['product_name', 'brand', 'category', 'sex', 'kid', 'sales_qty']
 
 let searchProductNames = ref<string[]>([])
@@ -43,7 +36,7 @@ let searchKids: boolean[] = []
 let searchQtys: number[] = []
 
 
-async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys: number[]) {
+async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys?: number[]) {
     let fullURL: string = ''
 
     if (productNames && productNames.length > 0) {
@@ -151,18 +144,21 @@ async function addProduct() {
         category_id: selectedCategory.value,
         sex: selectedSex.value,
         is_kids: selectedKidType.value,
-        sales_quantity: inputQty.value
-    };
+        sales_quantity: inputQty.value,
+        file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
+    }
 
-    await request.post(path, newProduct)
-    getProducts() // products 갱신
-}
+    try {
+        // 서버로 제품 추가 요청 보내기
+        await request.post(path, newProduct)
 
-function handleFileSelection(event) {
-    const files = event.target.files;
-    // 여러 개의 파일 선택 시, 기존에 선택한 파일 배열에 추가
-    for (let i = 0; i < files.length; i++) {
-        this.selectedFiles.push(files[i]);
+        // 성공적으로 추가되면, 선택된 파일들 초기화
+        selectedFiles.value = []
+
+        // products 갱신
+        getProducts()
+    } catch (error) {
+        console.error('제품 추가 중 에러 발생', error)
     }
 }
 
@@ -170,7 +166,7 @@ function addValue() {
     let values: string[] = []
     switch (selectedkey.value) {
         case 'product_name':
-            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value) => value.trim())
+            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
             searchProductNames.value.push(...values)
             searchWords.value = ''
             break;
@@ -187,8 +183,10 @@ function addValue() {
             selectedSex.value = ''
             break;
         case 'kid':
-            searchKids.push(selectedKidType.value)
-            selectedKidType.value = undefined
+            if (selectedKidType.value !== undefined) {
+                searchKids.push(selectedKidType.value)
+                selectedKidType.value = undefined
+            }
             break;
         case 'sales_qty':
             searchQtys.push(inputQty.value)
@@ -202,19 +200,51 @@ function addValue() {
 
 async function searchProducts() {
     await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
+    searchProductNames.value = []
 }
 
 
 // null 혹은 undefined 처리
-function getBrandName(brandId) {
-    const brand = this.brands.find((b) => b.brand_id === brandId);
+function getBrandName(this: any, brandId: any) {
+    const brand = this.brands.find((b: { brand_id: any; }) => b.brand_id === brandId);
     return brand ? brand.brand_name : 'Unknown';
 }
 
 // null 혹은 undefined 처리
-function getCategoryName(categoryId) {
-    const category = this.categories.find((c) => c.category_id === categoryId);
+function getCategoryName(this: any, categoryId: any) {
+    const category = this.categories.find((c: { category_id: any; }) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
+}
+
+
+function accumulateList(e: any) {
+    selectedFileError.value.isOverNumbers = false
+    selectedFileError.value.isOverSized = false
+
+    const files = e.target.files ? e.target.files : null
+    const mergedFiles = [...selectedFiles.value, ...files]
+
+    if (mergedFiles.length > 3) {
+        console.error('파일 갯수가 3개보다 많다');
+        selectedFileError.value.isOverNumbers = true;
+        return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        if (file.size > 1000000) {
+            console.error('파일 크기가 1MB 넘는 파일이 있다')
+            selectedFileError.value.isOverSized = true
+            return;
+        }
+    }
+
+    selectedFiles.value = mergedFiles
+}
+
+function getImage(fileName: string) {
+    const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
+    return path
 }
 
 onMounted(() => {
@@ -230,7 +260,7 @@ onMounted(() => {
     <section class="wrapper">
         <article class="create">
             <h3>Add a new Product</h3>
-            <form @submit.prevent="addProduct">
+            <form @submit.prevent="addProduct" method="post" enctype="multipart/form-data">
                 <div class="input-container">
                     <input class="input" type="text" placeholder="제품이름" v-model="inputName">
                 </div>
@@ -240,11 +270,11 @@ onMounted(() => {
                     <input class="input" type="radio" name="sex" value="공용" v-model="selectedSex">공용
                 </div>
                 <div class="input-container">
-                    <input class="input" type="number" placeholder="판매량" min="1" v-model="inputQty">
+                    <input class="input" type="number" min="1" v-model="inputQty">
                 </div>
                 <div class="input-container">
-                    <input class="input" type="radio" name="kid" value="true" v-model="selectedKidType">아동용
-                    <input class="input" type="radio" name="kid" value="false" v-model="selectedKidType">성인용
+                    <input class="input" type="radio" name="kid" :value="true" v-model="selectedKidType">아동용
+                    <input class="input" type="radio" name="kid" :value="false" v-model="selectedKidType">성인용
                 </div>
 
                 <div class="menu">
@@ -261,8 +291,11 @@ onMounted(() => {
                         </option>
                     </select>
                 </div>
+
                 <div class="input-container">
-                    <input class="input" type="file" accept="image/*" multiple @change="handleFileSelection">
+                    <input class="input" type="file" name="imgs" accept="image/*" @change="accumulateList" max="3" multiple>
+                    <span v-if="selectedFileError.isOverSized">선택한 파일 중 1MB를 초과하는 파일이 있습니다.</span>
+                    <span v-if="selectedFileError.isOverNumbers">최대 3개의 파일까지 저장 가능합니다.</span>
                     <div v-if="selectedFiles.length > 0">
                         <h4>선택한 파일:</h4>
                         <ul>
@@ -270,6 +303,7 @@ onMounted(() => {
                         </ul>
                     </div>
                 </div>
+
                 <input class="button" type="submit" value="Create Product"
                     :disabled="inputName.length === 0 || selectedBrand.length === 0 || selectedCategory.length === 0">
             </form>
@@ -340,7 +374,7 @@ onMounted(() => {
                 <div v-for="product in products" :key="product.category_id" class="product-card">
                     <template v-if="product.file_paths && product.file_paths.length > 0">
                         <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                            <img :src="filePath" alt="Product Image" class="product-image" />
+                            <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
                         </div>
                     </template>
                     <div class="product-details">
@@ -362,6 +396,11 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.wrapper {
+    color: #fff;
+    background-color: #333;
+}
+
 .product-wrapper {
     display: flex;
     flex-direction: column;
