@@ -4,7 +4,9 @@ export enum ExceptionCode {
   CategoryNotFound = '2001',
   CategoryDuplicated = '2002',
 
-  NoQueryDelivered = '0002',
-  DuplicatedValue = '0004',
+  NoQueryDelivered = '0001',
+  DuplicatedValue = '0002',
+  NotFoundID = '0003',
+
   UnCatched = '0000',
 }
