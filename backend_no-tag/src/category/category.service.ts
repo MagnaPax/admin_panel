@@ -5,13 +5,17 @@ import { Query } from 'src/queryHelper';
 
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CreateIntermediateDto } from 'src/create-intermediate.dto';
 import { SearchCategoryDto } from './dto/search-category.dto';
 
 import { Category } from './entities/category.entity';
 import { Brand } from 'src/brand/entities/brand.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { Intermediate } from 'src/intermediate.entity';
+
+import {
+  CategoryDuplicatedException,
+  CategoryNotFoundException,
+} from 'src/exceptions/custom-exception';
 
 @Injectable()
 export class CategoryService {
@@ -35,7 +39,7 @@ export class CategoryService {
       ['category_name'],
       this.categoryRepository,
     );
-    if (isDuplicated.length !== 0) throw new Error(`It's duplicated value`);
+    if (isDuplicated.length !== 0) throw new CategoryDuplicatedException();
 
     // 브랜드 추가
     const newCategory = await this.categoryRepository.save(createCategory);
@@ -153,9 +157,8 @@ export class CategoryService {
 
   async update(category_id: number, updateCategoryDto: UpdateCategoryDto) {
     const category = await this.findOne(category_id);
-    if (!category) {
-      throw new Error('Not found the category');
-    }
+    if (!category) throw new CategoryNotFoundException();
+
     Object.assign(category, updateCategoryDto);
     return await this.categoryRepository.save(category);
   }
@@ -166,7 +169,7 @@ export class CategoryService {
       ['category_id'],
       this.categoryRepository,
     );
-    if (!categories) throw new Error('Not found the category');
+    if (categories.length == 0) throw new CategoryNotFoundException();
 
     // Intermediate 엔티티 수정
     await this.intermediateRepository
