@@ -20,16 +20,16 @@ export default class CommonApi {
     return `${this.host}${path}`
   }
 
-  async saveResult(path: string, response: AxiosResponse<any, any>) {
+  async saveResult(path: string, response: any) {
     switch (path) {
       case 'brand':
-        await this.counterStore.setBrandList(response.data)
+        await this.counterStore.setBrandList(response)
         break
       case 'category':
-        await this.counterStore.setCategoryList(response.data)
+        await this.counterStore.setCategoryList(response)
         break
       case 'product':
-        await this.counterStore.setProductList(response.data)
+        await this.counterStore.setProductList(response)
         break
       default:
         break
