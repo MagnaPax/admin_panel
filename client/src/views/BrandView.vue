@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter'
 
@@ -7,23 +7,15 @@ import { useCounterStore } from '@/stores/counter'
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
-const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
-const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
 
 // store를 감시하고, 값이 변경될 때마다 변수 업데이트
-watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
-    brands.value = newBrandList
-})
-watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
-    categories.value = newCategoryList
-})
-watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
-    products.value = newProductList
-})
+const brands = computed(() => counterStore.brandList)
+const categories = computed(() => counterStore.categoryList)
+const products = computed(() => counterStore.productList)
+
 
 const brandName = ref<string | null>(null)
-const brandNames = ref<string[]>([])
+const brandNames = ref<string>('')
 const categoryName = ref<string | null>(null)
 const categoryNames = ref<string[]>([])
 const checkedItems = ref<string[]>([])
@@ -108,20 +100,20 @@ async function addBrand() {
 
 }
 
-
-function onCheckboxChange(checkbox) {
+function onCheckboxChange(checkbox: string) {
     if (checkbox === 'na') {
-        this.checkedItems = ['na']
+        checkedItems.value = ['na']
     } else if (checkbox === 'category' || checkbox === 'product') {
-        if (this.checkedItems.includes('na')) {
-            this.checkedItems = [checkbox]
+        if (checkedItems.value.includes('na')) {
+            checkedItems.value = [checkbox]
         }
     }
 }
 
 async function searchBrands() {
+
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
-    const values: string[] = brandNames.value.replace(/,\s*$/, '').split(",")
+    const values = brandNames.value.replace(/,\s*$/, '').split(",")
 
     // 각 값의 앞뒤 공백 제거하고 중복 제거
     const bNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
@@ -189,25 +181,26 @@ async function deleteBrand() {
         await request.saveResult(path, response)
     }
 
-    deleteNames.value = ''
+    deleteNames.value = []
     getBrands() // brands 갱신
 }
 
 // null 혹은 undefined 처리
-function getBrandName(brandId) {
-    const brand = this.brands.find((b) => b.brand_id === brandId);
+function getBrandName(brandId: number) {
+    const brand = brands.value.find((b) => b.brand_id === brandId);
     return brand ? brand.brand_name : 'Unknown';
 }
 
 // null 혹은 undefined 처리
-function getCategoryName(categoryId) {
-    const category = this.categories.find((c) => c.category_id === categoryId);
+function getCategoryName(categoryId: number) {
+    const category = categories.value.find((c) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
 }
 
-onMounted(() => {
-    getBrands()
-    getCategories()
+
+onMounted(async () => {
+    await getBrands()
+    await getCategories()
 })
 </script>
 
