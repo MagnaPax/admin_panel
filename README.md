@@ -1,5 +1,3 @@
-NoTag
-
 ### mysql 도커에 설치
 
 ./docker-compose.yml
@@ -84,4 +82,16 @@ DB_PORT=13306
 DB_USERNAME=root
 DB_PASSWORD=root
 DB_DATABASE=management
+```
+
+### 실행법
+
+```console
+<!-- 백엔드 -->
+$ cd backend_no-tag
+$ npm run start
+
+<!-- 프론트 -->
+$ cd client
+$ npm run dev
 ```
