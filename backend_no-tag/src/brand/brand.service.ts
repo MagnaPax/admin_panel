@@ -105,6 +105,8 @@ export class BrandService {
       this.brandRepository,
     );
 
+    if (!brands.length) throw new BrandNotFoundException();
+
     results = brands;
 
     // 브랜드 -> 중간테이블
