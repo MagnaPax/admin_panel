@@ -200,6 +200,11 @@ async function deleteBrand() {
     getBrands() // brands 갱신
 }
 
+function getImage(fileName: string) {
+    const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
+    return path
+}
+
 // null 혹은 undefined 처리
 function getBrandName(brandId: number) {
     const brand = brands.value.find((b) => b.brand_id === brandId);
@@ -312,7 +317,7 @@ onMounted(async () => {
                     <div v-for="product in products" :key="product.category_id" class="product-card">
                         <template v-if="product.file_paths && product.file_paths.length > 0">
                             <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                                <img :src="filePath" alt="Product Image" class="product-image" />
+                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
                             </div>
                         </template>
                         <div class="product-details">
