@@ -1,5 +1,5 @@
-import axios, { type AxiosResponse } from 'axios'
-import { setInterceptors } from './interceptors'
+import axios, { type AxiosError, type AxiosResponse } from 'axios'
+import { setInterceptors, handleErrorResponse } from './interceptors'
 import { useCounterStore } from '@/stores/counter'
 
 export default class CommonApi {
@@ -20,26 +20,37 @@ export default class CommonApi {
     return `${this.host}${path}`
   }
 
-  async saveResult(path: string, response: AxiosResponse<any, any>) {
+  async saveResult(path: string, response: any) {
     switch (path) {
       case 'brand':
-        await this.counterStore.setBrandList(response.data)
+        await this.counterStore.setBrandList(response)
         break
       case 'category':
-        await this.counterStore.setCategoryList(response.data)
+        await this.counterStore.setCategoryList(response)
         break
       case 'product':
-        await this.counterStore.setProductList(response.data)
+        await this.counterStore.setProductList(response)
         break
       default:
         break
     }
   }
 
-  async get(path: string): Promise<AxiosResponse<any, any>> {
+  async getOrigin(path: string): Promise<AxiosResponse<any, any>> {
     const requestURL = this.settingURL(path)
     const response = await this.axiosInstance.get(requestURL)
     return response
+  }
+
+  async get<D = any>(path: string): Promise<AxiosResponse<D>> {
+    const requestURL = this.settingURL(path)
+
+    try {
+      const response = await this.axiosInstance.get<AxiosResponse<D>>(requestURL)
+      return response.data // AxiosResponse 객체에서 응답 데이터만 반환
+    } catch (error) {
+      return Promise.reject(handleErrorResponse(error as AxiosError))
+    }
   }
 
   async post(path: string, body: object) {

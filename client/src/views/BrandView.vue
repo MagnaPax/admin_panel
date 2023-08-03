@@ -1,29 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter'
-
+import { type AxiosError } from 'axios'
+import { handleErrorResponse } from '@/api/interceptors'
 
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
-const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
-const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
 
 // store를 감시하고, 값이 변경될 때마다 변수 업데이트
-watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
-    brands.value = newBrandList
-})
-watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
-    categories.value = newCategoryList
-})
-watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
-    products.value = newProductList
-})
+const brands = computed(() => counterStore.brandList)
+const categories = computed(() => counterStore.categoryList)
+const products = computed(() => counterStore.productList)
+
 
 const brandName = ref<string | null>(null)
-const brandNames = ref<string[]>([])
+const searchNames = ref<string>('')
 const categoryName = ref<string | null>(null)
 const categoryNames = ref<string[]>([])
 const checkedItems = ref<string[]>([])
@@ -33,7 +26,8 @@ const updateID = ref<string | null>(null)
 const newBrandName = ref<string | null>(null)
 const isProduct = ref<boolean>(false)
 const isCategory = ref<boolean>(false)
-
+const errMsgCreate = ref<string>()
+const errMsgSearch = ref<string>()
 
 
 async function getCategories(path: string = 'category') {
@@ -71,14 +65,19 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
         fullURL = path
     }
 
-    const response = await request.get(fullURL)
-    // store에 저장
-    if (isProduct.value) {
-        await request.saveResult('product', response)
-    } else if (isCategory.value) {
-        await request.saveResult('category', response)
-    } else {
-        await request.saveResult(path, response)
+    try {
+        const response = await request.get(fullURL)
+        // store에 저장
+        if (isProduct.value) {
+            await request.saveResult('product', response)
+        } else if (isCategory.value) {
+            await request.saveResult('category', response)
+        } else {
+            await request.saveResult(path, response)
+        }
+        errMsgSearch.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+    } catch (error) {
+        errMsgSearch.value = String(error); // error를 문자열로 변환하여 할당
     }
 }
 
@@ -103,25 +102,49 @@ async function addBrand() {
     categoryName.value = null
     categoryNames.value = []
 
-    await request.post(path, body)
-    getBrands() // brands 갱신
-
+    try {
+        const response = await request.post(path, body)
+        await request.saveResult(path, response)
+        errMsgCreate.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+        getBrands() // brands 갱신
+    } catch (error) {
+        const axiosError = error as AxiosError<any, any>; // 'error' 변수를 명시적으로 AxiosError<any, any> 타입으로 지정
+        errMsgCreate.value = handleErrorResponse(axiosError)
+    }
 }
 
-
-function onCheckboxChange(checkbox) {
+function onCheckboxChange(checkbox: string) {
     if (checkbox === 'na') {
-        this.checkedItems = ['na']
+        checkedItems.value = ['na']
     } else if (checkbox === 'category' || checkbox === 'product') {
-        if (this.checkedItems.includes('na')) {
-            this.checkedItems = [checkbox]
+        if (checkedItems.value.includes('na')) {
+            checkedItems.value = [checkbox]
         }
     }
 }
 
+async function updateBrand() {
+    let fullURL: string = ''
+    const path = 'brand'
+    let body: any = {}
+
+    fullURL = `${path}/${updateID.value}`
+
+    body.brand_name = newBrandName.value
+    body = JSON.stringify(body)
+
+    newBrandName.value = ''
+
+    const response = await request.update(fullURL, body)
+    await request.saveResult(path, response)
+
+    getBrands() // brands 갱신
+}
+
 async function searchBrands() {
+
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
-    const values: string[] = brandNames.value.replace(/,\s*$/, '').split(",")
+    const values = searchNames.value.replace(/,\s*$/, '').split(",")
 
     // 각 값의 앞뒤 공백 제거하고 중복 제거
     const bNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
@@ -130,6 +153,8 @@ async function searchBrands() {
     if (bNames.length === 1) {
         bNames.push(bNames[0])
     }
+
+    searchNames.value = ''  // 검색칸 초기화
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
@@ -152,24 +177,6 @@ async function searchBrands() {
     }
 }
 
-async function updateBrand() {
-    let fullURL: string = ''
-    const path = 'brand'
-    let body: any = {}
-
-    fullURL = `${path}/${updateID.value}`
-
-    body.brand_name = newBrandName.value
-    body = JSON.stringify(body)
-
-    newBrandName.value = ''
-
-    const response = await request.update(fullURL, body)
-    await request.saveResult(path, response)
-
-    getBrands() // brands 갱신
-}
-
 async function deleteId() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
         deleteNames.value.push(deleteName.value)
@@ -189,25 +196,31 @@ async function deleteBrand() {
         await request.saveResult(path, response)
     }
 
-    deleteNames.value = ''
+    deleteNames.value = []
     getBrands() // brands 갱신
 }
 
+function getImage(fileName: string) {
+    const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
+    return path
+}
+
 // null 혹은 undefined 처리
-function getBrandName(brandId) {
-    const brand = this.brands.find((b) => b.brand_id === brandId);
+function getBrandName(brandId: number) {
+    const brand = brands.value.find((b) => b.brand_id === brandId);
     return brand ? brand.brand_name : 'Unknown';
 }
 
 // null 혹은 undefined 처리
-function getCategoryName(categoryId) {
-    const category = this.categories.find((c) => c.category_id === categoryId);
+function getCategoryName(categoryId: number) {
+    const category = categories.value.find((c) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
 }
 
-onMounted(() => {
-    getBrands()
-    getCategories()
+
+onMounted(async () => {
+    await getBrands()
+    await getCategories()
 })
 </script>
 
@@ -233,6 +246,7 @@ onMounted(() => {
                 </div>
                 <input class="input" type="text" v-model="brandName" placeholder="Input Brand name">
                 <input class="button" type="submit" value="Create Brand">
+                <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
             </form>
         </article>
 
@@ -257,7 +271,7 @@ onMounted(() => {
         <article class="search">
             <h3>Look Up Brand Names</h3>
             <form @submit.prevent="searchBrands">
-                <input class="input" type="text" v-model="brandNames" placeholder="name, name, ...">
+                <input class="input" type="text" v-model="searchNames" placeholder="name, name, ...">
 
                 <input id="ch_na" type="checkbox" v-model="checkedItems" value="na" @change="onCheckboxChange('na')" />
                 <label for="ch_na">N/A</label>
@@ -270,7 +284,8 @@ onMounted(() => {
                     @change="onCheckboxChange('product')" />
                 <label for="ch_product">For the products</label>
 
-                <input class="button" type="submit" value="Submit" :disabled="brandNames.length === 0">
+                <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
+                <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
             </form>
         </article>
 
@@ -302,7 +317,7 @@ onMounted(() => {
                     <div v-for="product in products" :key="product.category_id" class="product-card">
                         <template v-if="product.file_paths && product.file_paths.length > 0">
                             <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                                <img :src="filePath" alt="Product Image" class="product-image" />
+                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
                             </div>
                         </template>
                         <div class="product-details">
@@ -383,5 +398,12 @@ onMounted(() => {
 
 .brand-wrapper .list li {
     margin-bottom: 5px;
+}
+
+/* 에러 메시지 스타일 */
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
 }
 </style>

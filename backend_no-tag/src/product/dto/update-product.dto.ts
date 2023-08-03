@@ -6,10 +6,10 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   @IsNotEmpty()
   @IsDefined()
   @IsNumber()
-  brand_id: number;
+  brand_id?: number;
 
   @IsNotEmpty()
   @IsDefined()
   @IsNumber()
-  category_id: number;
+  category_id?: number;
 }

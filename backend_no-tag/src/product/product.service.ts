@@ -7,13 +7,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RemoveProductDto } from './dto/remove-product.dto';
 import { SearchProductDto } from './dto/search-product.dto';
-import { MakeProductDto } from './dto/make-product.dto';
 
 import { Product } from './entities/product.entity';
 import { Intermediate } from 'src/intermediate.entity';
 
 import { BrandService } from 'src/brand/brand.service';
 import { CategoryService } from 'src/category/category.service';
+
+import { NotFoundIDException } from 'src/exceptions/custom-exception';
 
 @Injectable()
 export class ProductService {
@@ -172,9 +173,7 @@ export class ProductService {
       updateProductDto.category_id,
     );
 
-    if (!brand || !category || !product) {
-      throw new Error('Not found one of IDs');
-    }
+    if (!brand || !category || !product) throw new NotFoundIDException();
 
     // DB에 덮어쓰기
     Object.assign(product, updateProductDto);

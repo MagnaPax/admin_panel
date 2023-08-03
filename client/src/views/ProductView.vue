@@ -131,6 +131,7 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
         fullURL = path;
     }
 
+
     const response = await request.get(fullURL)
     await request.saveResult(path, response) // store에 저장
 }
@@ -247,11 +248,11 @@ function getImage(fileName: string) {
     return path
 }
 
-onMounted(() => {
+onMounted(async () => {
     if (!brands.value.length && !categories.value.length && !products.value.length) {
-        getBrands()
-        getCategories()
-        getProducts()
+        await getBrands()
+        await getCategories()
+        await getProducts()
     }
 })
 </script>

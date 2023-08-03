@@ -1,26 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter'
-
+import { type AxiosError } from 'axios'
+import { handleErrorResponse } from '@/api/interceptors'
 
 const request = new CommonApi
 const counterStore = useCounterStore()
 
-const brands = ref<{ brand_id: number; brand_name: string; }[]>([])
-const categories = ref<{ brand_id: number; brand_name: string; }[]>([])
-const products = ref<{ product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]>([])
-
-// store를 감시하고, 값이 변경될 때마다 변수 업데이트
-watch(() => counterStore.brandList, (newBrandList: { brand_id: number; brand_name: string; }[]) => {
-    brands.value = newBrandList
-})
-watch(() => counterStore.categoryList, (newCategoryList: { category_id: number; category_name: string; }[]) => {
-    categories.value = newCategoryList
-})
-watch(() => counterStore.productList, (newProductList: { product_id: number; product_name: string; sex: string; brand_id: number; category_id: number; is_kids: boolean; sales_quantity: number; file_path: string[]; }[]) => {
-    products.value = newProductList
-})
+const brands = computed(() => counterStore.brandList)
+const categories = computed(() => counterStore.categoryList)
+const products = computed(() => counterStore.productList)
 
 const brandName = ref<string | null>(null)
 const brandNames = ref<string[]>([])
@@ -29,13 +19,17 @@ const categoryName = ref<string | null>(null)
 const updateID = ref<string | null>(null)
 const newCategoryName = ref<string | null>(null)
 
-const categoryNames = ref<string[]>([])
+const searchNames = ref<string>('')
 const checkedItems = ref<string[]>([])
 const isProduct = ref<boolean>(false)
 const isBrand = ref<boolean>(false)
 
 const deleteNames = ref<string[]>([])
 const deleteName = ref<string | null>(null)
+
+const errMsgSearch = ref<string>()
+const errMsgCreate = ref<string>()
+
 
 
 
@@ -62,15 +56,19 @@ async function getCategories(path: string = 'category', categoryNames?: string[]
         fullURL = path
     }
 
-
-    const response = await request.get(fullURL)
-    // store에 저장
-    if (isProduct.value) {
-        await request.saveResult('product', response)
-    } else if (isBrand.value) {
-        await request.saveResult('brand', response)
-    } else {
-        await request.saveResult(path, response)
+    try {
+        const response = await request.get(fullURL)
+        // store에 저장
+        if (isProduct.value) {
+            await request.saveResult('product', response)
+        } else if (isBrand.value) {
+            await request.saveResult('brand', response)
+        } else {
+            await request.saveResult(path, response)
+        }
+        errMsgSearch.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+    } catch (error) {
+        errMsgSearch.value = String(error); // error를 문자열로 변환하여 할당
     }
 }
 
@@ -128,9 +126,15 @@ async function addCategory() {
     brandName.value = null
     brandNames.value = []
 
-    await request.post(path, body)
-    getCategories() // categories 갱신
-
+    try {
+        const response = await request.post(path, body)
+        await request.saveResult(path, response)
+        errMsgCreate.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+        getCategories() // categories 갱신
+    } catch (error) {
+        const axiosError = error as AxiosError<any, any>; // 'error' 변수를 명시적으로 AxiosError<any, any> 타입으로 지정
+        errMsgCreate.value = handleErrorResponse(axiosError)
+    }
 }
 
 async function updateCategory() {
@@ -151,19 +155,19 @@ async function updateCategory() {
     getCategories() // categories 갱신
 }
 
-function onCheckboxChange(checkbox) {
+function onCheckboxChange(checkbox: string) {
     if (checkbox === 'na') {
-        this.checkedItems = ['na']
+        checkedItems.value = ['na']
     } else if (checkbox === 'brand' || checkbox === 'product') {
-        if (this.checkedItems.includes('na')) {
-            this.checkedItems = [checkbox]
+        if (checkedItems.value.includes('na')) {
+            checkedItems.value = [checkbox]
         }
     }
 }
 
 async function searchCategories() {
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
-    const values: string[] = categoryNames.value.replace(/,\s*$/, '').split(",")
+    const values = searchNames.value.replace(/,\s*$/, '').split(",")
 
     // 각 값의 앞뒤 공백 제거하고 중복 제거
     const cNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
@@ -172,6 +176,8 @@ async function searchCategories() {
     if (cNames.length === 1) {
         cNames.push(cNames[0])
     }
+
+    searchNames.value = ''  // 검색칸 초기화
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
@@ -194,11 +200,6 @@ async function searchCategories() {
     }
 }
 
-function getImage(name: string) {
-    const path = `../../${name}`
-    return new URL(path, import.meta.url).href
-}
-
 async function deleteId() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
         deleteNames.value.push(deleteName.value)
@@ -218,15 +219,30 @@ async function deleteCategory() {
         await request.saveResult(path, response)
     }
 
-    deleteNames.value = ''
+    deleteNames.value = []
     getCategories() // categories 갱신
 }
 
-onMounted(() => {
-    if (!brands.value.length && !categories.value.length) {
-        getBrands()
-        getCategories()
-    }
+function getImage(fileName: string) {
+    const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
+    return path
+}
+
+// null 혹은 undefined 처리
+function getBrandName(brandId: number) {
+    const brand = brands.value.find((b) => b.brand_id === brandId);
+    return brand ? brand.brand_name : 'Unknown';
+}
+
+// null 혹은 undefined 처리
+function getCategoryName(categoryId: number) {
+    const category = categories.value.find((c) => c.category_id === categoryId);
+    return category ? category.category_name : 'Unknown';
+}
+
+onMounted(async () => {
+    await getBrands()
+    await getCategories()
 })
 
 </script>
@@ -277,7 +293,7 @@ onMounted(() => {
         <article class="search">
             <h3>Look Up Category Names</h3>
             <form @submit.prevent="searchCategories">
-                <input class="input" type="text" v-model="categoryNames" placeholder="name, name, ...">
+                <input class="input" type="text" v-model="searchNames" placeholder="name, name, ...">
 
                 <input id="ch_na" type="checkbox" v-model="checkedItems" value="na" @change="onCheckboxChange('na')" />
                 <label for="ch_na">N/A</label>
@@ -290,7 +306,8 @@ onMounted(() => {
                     @change="onCheckboxChange('product')" />
                 <label for="ch_product">For the products</label>
 
-                <input class="button" type="submit" value="Submit" :disabled="categoryNames.length === 0">
+                <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
+                <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
             </form>
         </article>
 
@@ -327,12 +344,14 @@ onMounted(() => {
                         </template>
                         <div class="product-details">
                             <h3>{{ product.product_name }}</h3>
-                            <p>브랜드: {{
-                                brands.find((b) => b.brand_id === product.brand_id).brand_name }}</p>
+                            <p v-if="product.brand_id">
+                                브랜드: {{ getBrandName(product.brand_id) }}
+                            </p>
                             <p>성별: {{ product.sex }}</p>
                             <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
-                            <p>카테고리: {{
-                                categories.find((c) => c.category_id === product.category_id).category_name }}</p>
+                            <p v-if="product.category_id">
+                                카테고리: {{ getCategoryName(product.category_id) }}
+                            </p>
                             <p>판매량: {{ product.sales_quantity }}</p>
                         </div>
                     </div>
@@ -401,5 +420,12 @@ onMounted(() => {
 
 .category-wrapper .list li {
     margin-bottom: 5px;
+}
+
+/* 에러 메시지 스타일 */
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
 }
 </style>
