@@ -6,7 +6,7 @@ import { RouterLink } from 'vue-router'
     <header>
         <RouterLink to="/home">
             <div>
-                <img src="@/assets/logo_NoTag.jpg" alt="logo" />
+                <img class="logo" src="@/assets/H_logo.jpg" alt="logo" />
             </div>
         </RouterLink>
     </header>

@@ -3,7 +3,7 @@
 
 <template>
     <footer>
-        <p>&copy; 2023 Notag Group. All rights reserved.</p>
+        <p>&copy; 한천희(HAN, Chunhee). All rights reserved.</p>
     </footer>
 </template>
 
