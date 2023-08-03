@@ -2,7 +2,8 @@
 import { onMounted, ref, computed } from 'vue'
 import CommonApi from '@/api/common'
 import { useCounterStore } from '@/stores/counter'
-
+import { type AxiosError } from 'axios'
+import { handleErrorResponse } from '@/api/interceptors'
 
 const request = new CommonApi
 const counterStore = useCounterStore()
@@ -15,7 +16,7 @@ const products = computed(() => counterStore.productList)
 
 
 const brandName = ref<string | null>(null)
-const brandNames = ref<string>('')
+const searchNames = ref<string>('')
 const categoryName = ref<string | null>(null)
 const categoryNames = ref<string[]>([])
 const checkedItems = ref<string[]>([])
@@ -25,7 +26,8 @@ const updateID = ref<string | null>(null)
 const newBrandName = ref<string | null>(null)
 const isProduct = ref<boolean>(false)
 const isCategory = ref<boolean>(false)
-
+const errMsgCreate = ref<string>()
+const errMsgSearch = ref<string>()
 
 
 async function getCategories(path: string = 'category') {
@@ -63,14 +65,19 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
         fullURL = path
     }
 
-    const response = await request.get(fullURL)
-    // store에 저장
-    if (isProduct.value) {
-        await request.saveResult('product', response)
-    } else if (isCategory.value) {
-        await request.saveResult('category', response)
-    } else {
-        await request.saveResult(path, response)
+    try {
+        const response = await request.get(fullURL)
+        // store에 저장
+        if (isProduct.value) {
+            await request.saveResult('product', response)
+        } else if (isCategory.value) {
+            await request.saveResult('category', response)
+        } else {
+            await request.saveResult(path, response)
+        }
+        errMsgSearch.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+    } catch (error) {
+        errMsgSearch.value = String(error); // error를 문자열로 변환하여 할당
     }
 }
 
@@ -95,9 +102,15 @@ async function addBrand() {
     categoryName.value = null
     categoryNames.value = []
 
-    await request.post(path, body)
-    getBrands() // brands 갱신
-
+    try {
+        const response = await request.post(path, body)
+        await request.saveResult(path, response)
+        errMsgCreate.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+        getBrands() // brands 갱신
+    } catch (error) {
+        const axiosError = error as AxiosError<any, any>; // 'error' 변수를 명시적으로 AxiosError<any, any> 타입으로 지정
+        errMsgCreate.value = handleErrorResponse(axiosError)
+    }
 }
 
 function onCheckboxChange(checkbox: string) {
@@ -110,10 +123,28 @@ function onCheckboxChange(checkbox: string) {
     }
 }
 
+async function updateBrand() {
+    let fullURL: string = ''
+    const path = 'brand'
+    let body: any = {}
+
+    fullURL = `${path}/${updateID.value}`
+
+    body.brand_name = newBrandName.value
+    body = JSON.stringify(body)
+
+    newBrandName.value = ''
+
+    const response = await request.update(fullURL, body)
+    await request.saveResult(path, response)
+
+    getBrands() // brands 갱신
+}
+
 async function searchBrands() {
 
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
-    const values = brandNames.value.replace(/,\s*$/, '').split(",")
+    const values = searchNames.value.replace(/,\s*$/, '').split(",")
 
     // 각 값의 앞뒤 공백 제거하고 중복 제거
     const bNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
@@ -122,6 +153,8 @@ async function searchBrands() {
     if (bNames.length === 1) {
         bNames.push(bNames[0])
     }
+
+    searchNames.value = ''  // 검색칸 초기화
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
@@ -142,24 +175,6 @@ async function searchBrands() {
         isProduct.value = false
         await getBrands('brand', bNames)
     }
-}
-
-async function updateBrand() {
-    let fullURL: string = ''
-    const path = 'brand'
-    let body: any = {}
-
-    fullURL = `${path}/${updateID.value}`
-
-    body.brand_name = newBrandName.value
-    body = JSON.stringify(body)
-
-    newBrandName.value = ''
-
-    const response = await request.update(fullURL, body)
-    await request.saveResult(path, response)
-
-    getBrands() // brands 갱신
 }
 
 async function deleteId() {
@@ -226,6 +241,7 @@ onMounted(async () => {
                 </div>
                 <input class="input" type="text" v-model="brandName" placeholder="Input Brand name">
                 <input class="button" type="submit" value="Create Brand">
+                <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
             </form>
         </article>
 
@@ -250,7 +266,7 @@ onMounted(async () => {
         <article class="search">
             <h3>Look Up Brand Names</h3>
             <form @submit.prevent="searchBrands">
-                <input class="input" type="text" v-model="brandNames" placeholder="name, name, ...">
+                <input class="input" type="text" v-model="searchNames" placeholder="name, name, ...">
 
                 <input id="ch_na" type="checkbox" v-model="checkedItems" value="na" @change="onCheckboxChange('na')" />
                 <label for="ch_na">N/A</label>
@@ -263,7 +279,8 @@ onMounted(async () => {
                     @change="onCheckboxChange('product')" />
                 <label for="ch_product">For the products</label>
 
-                <input class="button" type="submit" value="Submit" :disabled="brandNames.length === 0">
+                <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
+                <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
             </form>
         </article>
 
@@ -376,5 +393,12 @@ onMounted(async () => {
 
 .brand-wrapper .list li {
     margin-bottom: 5px;
+}
+
+/* 에러 메시지 스타일 */
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
 }
 </style>
