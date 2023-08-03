@@ -67,7 +67,7 @@ export class UnCatchedException extends BaseException {
     super(
       ExceptionCode.UnCatched,
       HttpStatus.INTERNAL_SERVER_ERROR,
-      'An internal server error occurred',
+      'An internal server error occurred(에러가 발생 하였습니다)',
     );
   }
 }
