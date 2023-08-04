@@ -8,30 +8,26 @@ import { handleErrorResponse } from '@/api/interceptors'
 const request = new CommonApi
 const counterStore = useCounterStore()
 
+
+// store를 감시하고, 값이 변경될 때마다 변수 업데이트
 const brands = computed(() => counterStore.brandList)
 const categories = computed(() => counterStore.categoryList)
 const products = computed(() => counterStore.productList)
 
-const brandName = ref<string | null>(null)
-const brandNames = ref<string[]>([])
-const categoryName = ref<string | null>(null)
 
+const categoryName = ref<string | null>(null)
+const selectedBrand = ref<string | null>(null)
+const selectedBrands = ref<string[]>([])
 const updateID = ref<string | null>(null)
 const newCategoryName = ref<string | null>(null)
-
 const searchNames = ref<string>('')
 const checkedItems = ref<string[]>([])
 const isProduct = ref<boolean>(false)
 const isBrand = ref<boolean>(false)
-
 const deleteNames = ref<string[]>([])
 const deleteName = ref<string | null>(null)
-
 const errMsgSearch = ref<string>()
 const errMsgCreate = ref<string>()
-
-
-
 
 
 async function getCategories(path: string = 'category', categoryNames?: string[], brand?: boolean, product?: boolean) {
@@ -105,17 +101,27 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     }
 }
 
-function addId() {
-    if (brandName.value !== null && !brandNames.value.includes(brandName.value)) {
-        brandNames.value.push(brandName.value)
-        brandName.value = null
+function addBrand() {
+    if (selectedBrand.value !== null && !selectedBrands.value.includes(selectedBrand.value)) {
+        selectedBrands.value.push(selectedBrand.value)
+        selectedBrand.value = null
     }
+}
+
+function getBrandNameById(id: string) {
+    // 비교를 위해 brand_id 를 형변환
+    const selectedBrand = brands.value.find(brand => brand.brand_id.toString() === id);
+    return selectedBrand ? selectedBrand.brand_name : '';
+}
+
+function clearBrands() {
+    selectedBrands.value = [];
 }
 
 async function addCategory() {
     const path = 'category'
     let body: any = {}
-    const IDs = Object.values(brandNames.value)
+    const IDs = Object.values(selectedBrands.value)
 
     body.category_name = categoryName.value
     if (IDs.length > 0) body.brand_ids = IDs
@@ -123,8 +129,8 @@ async function addCategory() {
     body = JSON.stringify(body)
 
     categoryName.value = ''
-    brandName.value = null
-    brandNames.value = []
+    selectedBrand.value = null
+    selectedBrands.value = []
 
     try {
         const response = await request.post(path, body)
@@ -250,25 +256,34 @@ onMounted(async () => {
 <template>
     <section class="wrapper">
         <article class="create">
-            <h3>Add a new category name</h3>
-            <form @submit.prevent="addCategory">
-                <label for="brandSelect">Select Relative Brand with the Category</label>
-                <div class="menu">
-                    <select id="brandSelect" v-model="brandName">
+            <h3>Add a new category</h3>
+            <form class="container">
+                <div class="input-group">
+                    <label for="categoryNameInput">Category Name</label>
+                    <input class="input" type="text" id="categoryNameInput" v-model="categoryName"
+                        placeholder="Enter Category Name">
+                </div>
+
+                <div class="input-group">
+                    <label for="brandSelect">Relative Brands(Optional)</label>
+                    <select id="brandSelect" v-model="selectedBrand" @change="addBrand">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
-                    <button @click.prevent="addId">Add</button>
                 </div>
 
-                <div class="inputted_brand">
+                <div class="inputted-list">
+                    <h4>Selected Brands:</h4>
                     <ul>
-                        <li v-for="id in brandNames" :key="id">{{ id }}</li>
+                        <li v-for="id in selectedBrands" :key="id">
+                            {{ getBrandNameById(id) }}
+                        </li>
                     </ul>
                 </div>
-                <input class="input" type="text" v-model="categoryName" placeholder="Input Category name">
-                <input class="button" type="submit" value="Create Category">
+                <button class="clear-button" @click.prevent="clearBrands">Clear Brands</button>
+                <button class="button" @click.prevent="addCategory" :disabled="!categoryName">Create Category</button>
+                <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
             </form>
         </article>
 
@@ -300,11 +315,11 @@ onMounted(async () => {
 
                 <input id="ch_brand" type="checkbox" v-model="checkedItems" value="brand"
                     @change="onCheckboxChange('brand')" />
-                <label for="ch_brand">For the brands</label>
+                <label for="ch_brand">For the brands(입력한 카테고리와 관련된 브랜드 목록)</label>
 
                 <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
                     @change="onCheckboxChange('product')" />
-                <label for="ch_product">For the products</label>
+                <label for="ch_product">For the products(입력한 카테고리와 관련된 제품 목록)</label>
 
                 <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
                 <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>

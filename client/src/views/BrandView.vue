@@ -17,8 +17,8 @@ const products = computed(() => counterStore.productList)
 
 const brandName = ref<string | null>(null)
 const searchNames = ref<string>('')
-const categoryName = ref<string | null>(null)
-const categoryNames = ref<string[]>([])
+const selectedCategory = ref<string | null>(null)
+const selectedCategories = ref<string[]>([])
 const checkedItems = ref<string[]>([])
 const deleteName = ref<string | null>(null)
 const deleteNames = ref<string[]>([])
@@ -81,17 +81,27 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     }
 }
 
-function addId() {
-    if (categoryName.value !== null && !categoryNames.value.includes(categoryName.value)) {
-        categoryNames.value.push(categoryName.value)
-        categoryName.value = null
+function addCategory() {
+    if (selectedCategory.value !== null && !selectedCategories.value.includes(selectedCategory.value)) {
+        selectedCategories.value.push(selectedCategory.value)
+        selectedCategory.value = null
     }
+}
+
+function getCategoryNameById(id: string) {
+    // 비교를 위해 category_id 를 형변환
+    const selectedCategory = categories.value.find(category => category.category_id.toString() === id);
+    return selectedCategory ? selectedCategory.category_name : '';
+}
+
+function clearCategories() {
+    selectedCategories.value = [];
 }
 
 async function addBrand() {
     const path = 'brand'
     let body: any = {}
-    const IDs = Object.values(categoryNames.value)
+    const IDs = Object.values(selectedCategories.value)
 
     body.brand_name = brandName.value
     if (IDs.length > 0) body.category_ids = IDs
@@ -99,8 +109,8 @@ async function addBrand() {
     body = JSON.stringify(body)
 
     brandName.value = ''
-    categoryName.value = null
-    categoryNames.value = []
+    selectedCategory.value = null
+    selectedCategories.value = []
 
     try {
         const response = await request.post(path, body)
@@ -227,25 +237,32 @@ onMounted(async () => {
 <template>
     <section class="wrapper">
         <article class="create">
-            <h3>Add a new brand name</h3>
-            <form @submit.prevent="addBrand">
-                <label for="categorySelect">Select Relative Category with the brand</label>
-                <div class="menu">
-                    <select id="categorySelect" v-model="categoryName">
+            <h3>Add a new brand</h3>
+            <form class="container">
+                <div class="input-group">
+                    <label for="brandNameInput">Brand Name</label>
+                    <input class="input" type="text" id="brandNameInput" v-model="brandName" placeholder="Enter Brand Name">
+                </div>
+
+                <div class="input-group">
+                    <label for="categorySelect">Relative Category(Optional)</label>
+                    <select id="categorySelect" v-model="selectedCategory" @change="addCategory">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
                     </select>
-                    <button @click.prevent="addId">Add</button>
                 </div>
 
-                <div class="inputted_category">
+                <div class="inputted-list">
+                    <h4>Selected Categories:</h4>
                     <ul>
-                        <li v-for="id in categoryNames" :key="id">{{ id }}</li>
+                        <li v-for="id in selectedCategories" :key="id">
+                            {{ getCategoryNameById(id) }}
+                        </li>
                     </ul>
                 </div>
-                <input class="input" type="text" v-model="brandName" placeholder="Input Brand name">
-                <input class="button" type="submit" value="Create Brand">
+                <button class="clear-button" @click.prevent="clearCategories">Clear Categories</button>
+                <button class="button" @click.prevent="addBrand" :disabled="!brandName">Create Brand</button>
                 <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
             </form>
         </article>
@@ -278,11 +295,11 @@ onMounted(async () => {
 
                 <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
                     @change="onCheckboxChange('category')" />
-                <label for="ch_category">For the categories</label>
+                <label for="ch_category">For the categories(입력한 브랜드와 관련된 카테고리 목록)</label>
 
                 <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
                     @change="onCheckboxChange('product')" />
-                <label for="ch_product">For the products</label>
+                <label for="ch_product">For the products(입력한 브랜드와 관련된 제품 목록)</label>
 
                 <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
                 <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
