@@ -30,6 +30,154 @@ const errMsgCreate = ref<string>()
 const errMsgSearch = ref<string>()
 
 
+
+
+function makeAddList() {
+    if (selectedCategory.value !== null && !selectedCategories.value.includes(selectedCategory.value)) {
+        selectedCategories.value.push(selectedCategory.value)
+        selectedCategory.value = null
+    }
+}
+
+function getCategoryNameById(id: string) {
+    const numberId = Number(id);
+    const matchedCategory = categories.value.find(category => category.category_id === numberId);
+    return matchedCategory ? matchedCategory.category_name : '';
+}
+
+function clearCategories() {
+    selectedCategories.value = [];
+}
+
+async function createBrand() {
+    const path = 'brand'
+    let body: any = {}
+    const IDs = Object.values(selectedCategories.value)
+
+    body.brand_name = brandName.value
+    if (IDs.length > 0) body.category_ids = IDs
+
+    body = JSON.stringify(body)
+
+    brandName.value = ''
+    selectedCategory.value = null
+    selectedCategories.value = []
+
+    try {
+        const response = await request.post(path, body)
+        await request.saveResult(path, response)
+        errMsgCreate.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+        getBrands() // brands 갱신
+    } catch (error) {
+        const axiosError = error as AxiosError<any, any>; // 'error' 변수를 명시적으로 AxiosError<any, any> 타입으로 지정
+        errMsgCreate.value = handleErrorResponse(axiosError)
+    }
+}
+
+
+
+async function updateBrand() {
+    let fullURL: string = ''
+    const path = 'brand'
+    let body: any = {}
+
+    fullURL = `${path}/${updateID.value}`
+
+    body.brand_name = newBrandName.value
+    body = JSON.stringify(body)
+
+    newBrandName.value = ''
+
+    const response = await request.update(fullURL, body)
+    await request.saveResult(path, response)
+
+    getBrands() // brands 갱신
+}
+
+
+
+function onCheckboxChange(checkbox: string) {
+    checkedItems.value = [checkbox];
+}
+
+async function searchBrands() {
+
+    // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
+    const values = searchNames.value.replace(/,\s*$/, '').split(",")
+
+    // 각 값의 앞뒤 공백 제거하고 중복 제거
+    const bNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
+
+    // 단어가 한 개만 들어오는 경우, 두 개로 복사하여 추가(백엔드 설계 결함)
+    if (bNames.length === 1) {
+        bNames.push(bNames[0])
+    }
+
+    searchNames.value = '' // 검색칸 초기화
+
+    const tables = Object.values(checkedItems.value)
+    const product = tables.includes('product')
+    const category = tables.includes('category')
+
+
+    if (!product && !category) {
+        isProduct.value = false
+        isCategory.value = false
+        await getBrands('brand', bNames)
+    } else if (category) {
+        isProduct.value = false
+        isCategory.value = true
+        await getBrands('brand', bNames, true)
+    } else if (product) {
+        isProduct.value = true
+        isCategory.value = false
+        await getBrands('brand', bNames, false, true)
+    }
+}
+
+
+
+async function makeDeleteList() {
+    if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
+        deleteNames.value.push(deleteName.value)
+        deleteName.value = null
+    }
+}
+
+function clearDeleteList() {
+    deleteNames.value = [];
+}
+
+function getBrandNameById(id: string) {
+    const numberId = Number(id);
+    const brandsArray = Array.isArray(brands.value) ? brands.value : [];
+
+    const nameToDelete = brandsArray.find(brand => brand.brand_id === numberId);
+    return nameToDelete ? nameToDelete.brand_name : '';
+}
+
+async function deleteBrand() {
+    const path = 'brand';
+    const IDs = Object.values(deleteNames.value);
+
+    for (const el of IDs) {
+        console.log(el);
+        const fullURL = `brand/${el}`;
+        try {
+            const response = await request.delete(fullURL);
+            if (response) {
+                await request.saveResult(path, response);
+                await getBrands(); // brands 갱신
+            }
+            deleteNames.value = [];
+        } catch (error) {
+            console.error('Error deleting brand:', error);
+        }
+    }
+}
+
+
+
 async function getCategories(path: string = 'category') {
     const fullURL = path
     const response = await request.get(fullURL)
@@ -81,158 +229,19 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     }
 }
 
-function makeAddList() {
-    if (selectedCategory.value !== null && !selectedCategories.value.includes(selectedCategory.value)) {
-        selectedCategories.value.push(selectedCategory.value)
-        selectedCategory.value = null
-    }
-}
-
-function getCategoryNameById(id: string) {
-    const numberId = Number(id);
-    const matchedCategory = categories.value.find(category => category.category_id === numberId);
-    return matchedCategory ? matchedCategory.category_name : '';
-}
-
-function clearCategories() {
-    selectedCategories.value = [];
-}
-
-async function createBrand() {
-    const path = 'brand'
-    let body: any = {}
-    const IDs = Object.values(selectedCategories.value)
-
-    body.brand_name = brandName.value
-    if (IDs.length > 0) body.category_ids = IDs
-
-    body = JSON.stringify(body)
-
-    brandName.value = ''
-    selectedCategory.value = null
-    selectedCategories.value = []
-
-    try {
-        const response = await request.post(path, body)
-        await request.saveResult(path, response)
-        errMsgCreate.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
-        getBrands() // brands 갱신
-    } catch (error) {
-        const axiosError = error as AxiosError<any, any>; // 'error' 변수를 명시적으로 AxiosError<any, any> 타입으로 지정
-        errMsgCreate.value = handleErrorResponse(axiosError)
-    }
-}
-
-function onCheckboxChange(checkbox: string) {
-    checkedItems.value = [checkbox];
-}
-
-async function updateBrand() {
-    let fullURL: string = ''
-    const path = 'brand'
-    let body: any = {}
-
-    fullURL = `${path}/${updateID.value}`
-
-    body.brand_name = newBrandName.value
-    body = JSON.stringify(body)
-
-    newBrandName.value = ''
-
-    const response = await request.update(fullURL, body)
-    await request.saveResult(path, response)
-
-    getBrands() // brands 갱신
-}
-
-async function searchBrands() {
-
-    // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
-    const values = searchNames.value.replace(/,\s*$/, '').split(",")
-
-    // 각 값의 앞뒤 공백 제거하고 중복 제거
-    const bNames = Array.from(new Set(values.map((value) => value.trim()))).filter(Boolean)
-
-    // 단어가 한 개만 들어오는 경우, 두 개로 복사하여 추가(백엔드 설계 결함)
-    if (bNames.length === 1) {
-        bNames.push(bNames[0])
-    }
-
-    searchNames.value = '' // 검색칸 초기화
-
-    const tables = Object.values(checkedItems.value)
-    const product = tables.includes('product')
-    const category = tables.includes('category')
-
-
-    if (!product && !category) {
-        isProduct.value = false
-        isCategory.value = false
-        await getBrands('brand', bNames)
-    } else if (category) {
-        isProduct.value = false
-        isCategory.value = true
-        await getBrands('brand', bNames, true)
-    } else if (product) {
-        isProduct.value = true
-        isCategory.value = false
-        await getBrands('brand', bNames, false, true)
-    }
-}
-
-async function makeDeleteList() {
-    if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
-        deleteNames.value.push(deleteName.value)
-        deleteName.value = null
-    }
-}
-
-function clearDeleteList() {
-    deleteNames.value = [];
-}
-
-function getBrandNameById(id: string) {
-    const numberId = Number(id);
-    const brandsArray = Array.isArray(brands.value) ? brands.value : [];
-
-    const nameToDelete = brandsArray.find(brand => brand.brand_id === numberId);
-    return nameToDelete ? nameToDelete.brand_name : '';
-}
-
-async function deleteBrand() {
-    const path = 'brand';
-    const IDs = Object.values(deleteNames.value);
-
-    for (const el of IDs) {
-        console.log(el);
-        const fullURL = `brand/${el}`;
-        try {
-            const response = await request.delete(fullURL);
-            if (response) {
-                await request.saveResult(path, response);
-                await getBrands(); // brands 갱신
-            }
-            deleteNames.value = [];
-        } catch (error) {
-            console.error('Error deleting brand:', error);
-        }
-    }
-}
-
-
 function getImage(fileName: string) {
     const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
     return path
 }
 
-// null 혹은 undefined 처리
 function getBrandName(brandId: number) {
+    // brandId 가 null혹은 undefined일 때
     const brand = brands.value.find((b) => b.brand_id === brandId);
     return brand ? brand.brand_name : 'Unknown';
 }
 
-// null 혹은 undefined 처리
 function getCategoryName(categoryId: number) {
+    // categoryId가 null 혹은 undefined일 때
     const category = categories.value.find((c) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
 }
@@ -298,31 +307,6 @@ onMounted(async () => {
         </article>
 
 
-        <article class="search">
-            <h3>Look Up Brand Names</h3>
-            <form @submit.prevent="searchBrands" class="container">
-                <div class="search-group">
-                    <label for="searchNameInput">Search Names</label>
-                    <input class="input" id="searchNameInput" type="text" v-model="searchNames"
-                        placeholder="name, name, ...">
-                </div>
-                <div class="search-group">
-                    <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
-                        @change="onCheckboxChange('category')" />
-                    <label for="ch_category">For the categories(입력한 브랜드와 관련된 카테고리 목록)</label>
-
-                    <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
-                        @change="onCheckboxChange('product')" />
-                    <label for="ch_product">For the products(입력한 브랜드와 관련된 제품 목록)</label>
-                </div>
-                <div class="search-group">
-                    <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
-                </div>
-            </form>
-            <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
-        </article>
-
-
         <article class="delete">
             <h3>Remove Brand Name</h3>
             <form @submit.prevent="deleteBrand" class="container">
@@ -351,6 +335,31 @@ onMounted(async () => {
                     <input class="button" type="submit" value="Delete Brands" :disabled="deleteNames.length == 0">
                 </div>
             </form>
+        </article>
+
+
+        <article class="search">
+            <h3>Look Up Brand Names</h3>
+            <form @submit.prevent="searchBrands" class="container">
+                <div class="search-group">
+                    <label for="searchNameInput">Search Names</label>
+                    <input class="input" id="searchNameInput" type="text" v-model="searchNames"
+                        placeholder="name, name, ...">
+                </div>
+                <div class="search-group">
+                    <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
+                        @change="onCheckboxChange('category')" />
+                    <label for="ch_category">For the categories(입력한 브랜드와 관련된 카테고리 목록)</label>
+
+                    <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
+                        @change="onCheckboxChange('product')" />
+                    <label for="ch_product">For the products(입력한 브랜드와 관련된 제품 목록)</label>
+                </div>
+                <div class="search-group">
+                    <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
+                </div>
+            </form>
+            <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
         </article>
 
 
