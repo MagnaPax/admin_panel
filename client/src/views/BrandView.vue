@@ -187,28 +187,45 @@ async function searchBrands() {
     }
 }
 
-async function deleteId() {
+async function makeDeleteList() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
         deleteNames.value.push(deleteName.value)
         deleteName.value = null
     }
 }
 
+function clearDeleteList() {
+    deleteNames.value = [];
+}
+
+function getBrandNameById(id: string) {
+    const numberId = Number(id);
+    const brandsArray = Array.isArray(brands.value) ? brands.value : [];
+
+    const nameToDelete = brandsArray.find(brand => brand.brand_id === numberId);
+    return nameToDelete ? nameToDelete.brand_name : '';
+}
+
 async function deleteBrand() {
-    let fullURL: string = ''
-    const path = 'brand'
-    const IDs = Object.values(deleteNames.value)
+    const path = 'brand';
+    const IDs = Object.values(deleteNames.value);
 
     for (const el of IDs) {
-        console.log(el)
-        fullURL = `brand/${el}`
-        const response = await request.delete(fullURL)
-        await request.saveResult(path, response)
+        console.log(el);
+        const fullURL = `brand/${el}`;
+        try {
+            const response = await request.delete(fullURL);
+            if (response) {
+                await request.saveResult(path, response);
+                await getBrands(); // brands 갱신
+            }
+            deleteNames.value = [];
+        } catch (error) {
+            console.error('Error deleting brand:', error);
+        }
     }
-
-    deleteNames.value = []
-    getBrands() // brands 갱신
 }
+
 
 function getImage(fileName: string) {
     const path = `${import.meta.env.VITE_APP_SERVER_URL}${fileName}`
@@ -312,20 +329,31 @@ onMounted(async () => {
 
         <article class="delete">
             <h3>Remove Brand Name</h3>
-            <form @submit.prevent="deleteBrand">
-                <div class="menu">
-                    <select id="deleteSelect" v-model="deleteName">
+            <form @submit.prevent="deleteBrand" class="container">
+                <div class="delete-group">
+                    <select id="deleteSelect" v-model="deleteName" @change.prevent="makeDeleteList">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
-                    <button @click.prevent="deleteId">Add to delete</button>
                 </div>
 
-                <ul>
-                    <li v-for="id in deleteNames" :key="id">{{ id }}</li>
-                </ul>
-                <input class="button" type="submit" value="Delete Brands">
+                <div class="inputted-list">
+                    <h4>Selected Brands:</h4>
+                    <ul>
+                        <li v-for="id in deleteNames" :key="id">
+                            {{ getBrandNameById(id) }}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="delete-group">
+                    <button class="clear-button" @click.prevent="clearDeleteList">Clear List</button>
+                </div>
+
+                <div class="delete-group">
+                    <input class="button" type="submit" value="Delete Brands" :disabled="deleteNames.length == 0">
+                </div>
             </form>
         </article>
 
