@@ -81,7 +81,7 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     }
 }
 
-function addCategory() {
+function makeAddList() {
     if (selectedCategory.value !== null && !selectedCategories.value.includes(selectedCategory.value)) {
         selectedCategories.value.push(selectedCategory.value)
         selectedCategory.value = null
@@ -89,16 +89,16 @@ function addCategory() {
 }
 
 function getCategoryNameById(id: string) {
-    // 비교를 위해 category_id 를 형변환
-    const selectedCategory = categories.value.find(category => category.category_id.toString() === id);
-    return selectedCategory ? selectedCategory.category_name : '';
+    const numberId = Number(id);
+    const matchedCategory = categories.value.find(category => category.category_id === numberId);
+    return matchedCategory ? matchedCategory.category_name : '';
 }
 
 function clearCategories() {
     selectedCategories.value = [];
 }
 
-async function addBrand() {
+async function createBrand() {
     const path = 'brand'
     let body: any = {}
     const IDs = Object.values(selectedCategories.value)
@@ -240,19 +240,17 @@ onMounted(async () => {
             <h3>Add a new brand</h3>
             <form class="container">
                 <div class="input-group">
-                    <label for="brandNameInput">Brand Name</label>
-                    <input class="input" type="text" id="brandNameInput" v-model="brandName" placeholder="Enter Brand Name">
+                    <label for="newNameInput">Brand Name</label>
+                    <input class="input" type="text" id="newNameInput" v-model="brandName" placeholder="Enter Brand Name">
                 </div>
-
                 <div class="input-group">
                     <label for="categorySelect">Relative Category(Optional)</label>
-                    <select id="categorySelect" v-model="selectedCategory" @change="addCategory">
+                    <select id="categorySelect" v-model="selectedCategory" @change.prevent="makeAddList">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
                     </select>
                 </div>
-
                 <div class="inputted-list">
                     <h4>Selected Categories:</h4>
                     <ul>
@@ -261,10 +259,14 @@ onMounted(async () => {
                         </li>
                     </ul>
                 </div>
-                <button class="clear-button" @click.prevent="clearCategories">Clear Categories</button>
-                <button class="button" @click.prevent="addBrand" :disabled="!brandName">Create Brand</button>
-                <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
+                <div class="input-group">
+                    <button class="clear-button" @click.prevent="clearCategories">Clear Categories</button>
+                </div>
+                <div class="input-group">
+                    <button class="button" @click.prevent="createBrand" :disabled="!brandName">Create Brand</button>
+                </div>
             </form>
+            <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
         </article>
 
 
