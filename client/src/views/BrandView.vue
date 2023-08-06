@@ -272,16 +272,17 @@ onMounted(async () => {
 
         <article class="update">
             <h3>Update Brand Name</h3>
-            <form @submit.prevent="updateBrand">
-                <div class="menu">
+            <form @submit.prevent="updateBrand" class="container">
+                <div class="update-group">
+                    <label for="updateSelect">Original Brand Name</label>
                     <select id="updateSelect" v-model="updateID">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
                     TO
+                    <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
                 </div>
-                <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
                 <input class="button" type="submit" value="Update Brand">
             </form>
         </article>
