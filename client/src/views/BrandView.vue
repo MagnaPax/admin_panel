@@ -124,13 +124,7 @@ async function createBrand() {
 }
 
 function onCheckboxChange(checkbox: string) {
-    if (checkbox === 'na') {
-        checkedItems.value = ['na']
-    } else if (checkbox === 'category' || checkbox === 'product') {
-        if (checkedItems.value.includes('na')) {
-            checkedItems.value = [checkbox]
-        }
-    }
+    checkedItems.value = [checkbox];
 }
 
 async function updateBrand() {
@@ -164,26 +158,25 @@ async function searchBrands() {
         bNames.push(bNames[0])
     }
 
-    searchNames.value = ''  // 검색칸 초기화
+    searchNames.value = '' // 검색칸 초기화
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
     const category = tables.includes('category')
 
 
-    if (product && category) {
-        isProduct.value = true
-        isCategory.value = true
-        await getBrands('brand', bNames, true, true)
-    } else if (product) {
-        isProduct.value = true
-        await getBrands('brand', bNames, undefined, true)
+    if (!product && !category) {
+        isProduct.value = false
+        isCategory.value = false
+        await getBrands('brand', bNames)
     } else if (category) {
+        isProduct.value = false
         isCategory.value = true
         await getBrands('brand', bNames, true)
-    } else {
-        isProduct.value = false
-        await getBrands('brand', bNames)
+    } else if (product) {
+        isProduct.value = true
+        isCategory.value = false
+        await getBrands('brand', bNames, false, true)
     }
 }
 
@@ -307,23 +300,26 @@ onMounted(async () => {
 
         <article class="search">
             <h3>Look Up Brand Names</h3>
-            <form @submit.prevent="searchBrands">
-                <input class="input" type="text" v-model="searchNames" placeholder="name, name, ...">
+            <form @submit.prevent="searchBrands" class="container">
+                <div class="search-group">
+                    <label for="searchNameInput">Search Names</label>
+                    <input class="input" id="searchNameInput" type="text" v-model="searchNames"
+                        placeholder="name, name, ...">
+                </div>
+                <div class="search-group">
+                    <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
+                        @change="onCheckboxChange('category')" />
+                    <label for="ch_category">For the categories(입력한 브랜드와 관련된 카테고리 목록)</label>
 
-                <input id="ch_na" type="checkbox" v-model="checkedItems" value="na" @change="onCheckboxChange('na')" />
-                <label for="ch_na">N/A</label>
-
-                <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
-                    @change="onCheckboxChange('category')" />
-                <label for="ch_category">For the categories(입력한 브랜드와 관련된 카테고리 목록)</label>
-
-                <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
-                    @change="onCheckboxChange('product')" />
-                <label for="ch_product">For the products(입력한 브랜드와 관련된 제품 목록)</label>
-
-                <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
-                <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
+                    <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
+                        @change="onCheckboxChange('product')" />
+                    <label for="ch_product">For the products(입력한 브랜드와 관련된 제품 목록)</label>
+                </div>
+                <div class="search-group">
+                    <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
+                </div>
             </form>
+            <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
         </article>
 
 
