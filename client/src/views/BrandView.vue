@@ -29,6 +29,9 @@ const isCategory = ref<boolean>(false)
 const errMsgCreate = ref<string>()
 const errMsgSearch = ref<string>()
 
+const sortOrder = ref('asc');
+const sortColumn = ref('');
+
 
 
 
@@ -112,8 +115,6 @@ async function searchBrands() {
     if (bNames.length === 1) {
         bNames.push(bNames[0])
     }
-
-    searchNames.value = '' // 검색칸 초기화
 
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
@@ -246,6 +247,32 @@ function getCategoryName(categoryId: number) {
     return category ? category.category_name : 'Unknown';
 }
 
+const sortedProducts = computed(() => {
+    const sorted = [...products.value];
+    sorted.sort((a, b) => {
+        const col = sortColumn.value;
+
+        // Add an index signature to the object type
+        const indexedA = a as Record<string, any>;
+        const indexedB = b as Record<string, any>;
+
+        if (sortOrder.value === 'asc') {
+            return indexedA[col] < indexedB[col] ? -1 : 1;
+        } else {
+            return indexedA[col] > indexedB[col] ? -1 : 1;
+        }
+    });
+    return sorted;
+});
+
+function sortProducts(column: string) {
+    if (sortColumn.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn.value = column;
+        sortOrder.value = 'asc';
+    }
+}
 
 onMounted(async () => {
     await getBrands()
@@ -342,6 +369,7 @@ onMounted(async () => {
             <h3>Look Up Brand Names</h3>
             <form @submit.prevent="searchBrands" class="container">
                 <div class="search-group">
+                    <!-- 검색어 입력 필드 -->
                     <label for="searchNameInput">Search Names</label>
                     <input class="input" id="searchNameInput" type="text" v-model="searchNames"
                         placeholder="name, name, ...">
@@ -367,23 +395,57 @@ onMounted(async () => {
             <div v-if="isProduct">
                 <h2>Products</h2>
                 <div class="product-cards">
-                    <div v-for="product in products" :key="product.category_id" class="product-card">
-                        <template v-if="product.file_paths && product.file_paths.length > 0">
-                            <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
+                    <div>
+                        <button @click="sortProducts('product_name')">Product Name</button>
+                        <button @click="sortProducts('brand_id')">Brand</button>
+                        <button @click="sortProducts('sex')">Sex</button>
+                        <button @click="sortProducts('is_kids')">Usage</button>
+                        <button @click="sortProducts('category_id')">Category</button>
+                        <button @click="sortProducts('sales_quantity')">Sales Quantity</button>
+                    </div>
+                    <!-- 검색어가 입력되었을 때, 정렬된 제품 목록 표시 -->
+                    <div v-if="searchNames.length > 0">
+                        <div v-for="product in sortedProducts" :key="product.product_id" class="product-card">
+                            <template v-if="product.file_paths && product.file_paths.length > 0">
+                                <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
+                                    <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
+                                </div>
+                            </template>
+                            <div class="product-details">
+                                <h3>{{ product.product_name }}</h3>
+                                <p v-if="product.brand_id">
+                                    브랜드: {{ getBrandName(product.brand_id) }}
+                                </p>
+                                <p>성별: {{ product.sex }}</p>
+                                <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
+                                <p v-if="product.category_id">
+                                    카테고리: {{ getCategoryName(product.category_id) }}
+                                </p>
+                                <p>판매량: {{ product.sales_quantity }}</p>
                             </div>
-                        </template>
-                        <div class="product-details">
-                            <h3>{{ product.product_name }}</h3>
-                            <p v-if="product.brand_id">
-                                브랜드: {{ getBrandName(product.brand_id) }}
-                            </p>
-                            <p>성별: {{ product.sex }}</p>
-                            <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
-                            <p v-if="product.category_id">
-                                카테고리: {{ getCategoryName(product.category_id) }}
-                            </p>
-                            <p>판매량: {{ product.sales_quantity }}</p>
+                        </div>
+                    </div>
+                    <!-- 검색어가 입력되지 않았을 때, 모든 제품 목록 표시 -->
+                    <div v-else>
+                        <div>검색어 없을 때</div>
+                        <div v-for="product in products" :key="product.category_id" class="product-card">
+                            <template v-if="product.file_paths && product.file_paths.length > 0">
+                                <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
+                                    <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
+                                </div>
+                            </template>
+                            <div class="product-details">
+                                <h3>{{ product.product_name }}</h3>
+                                <p v-if="product.brand_id">
+                                    브랜드: {{ getBrandName(product.brand_id) }}
+                                </p>
+                                <p>성별: {{ product.sex }}</p>
+                                <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
+                                <p v-if="product.category_id">
+                                    카테고리: {{ getCategoryName(product.category_id) }}
+                                </p>
+                                <p>판매량: {{ product.sales_quantity }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -391,13 +453,8 @@ onMounted(async () => {
             <div v-else-if="isCategory">
                 <h2>Categories</h2>
                 <ul>
-                    <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}</li>
-                </ul>
-            </div>
-            <div v-else>
-                <h2>Brands</h2>
-                <ul>
-                    <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}</li>
+                    <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}
+                    </li>
                 </ul>
             </div>
         </article>
