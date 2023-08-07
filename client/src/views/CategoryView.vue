@@ -29,9 +29,13 @@ const deleteName = ref<string | null>(null)
 const errMsgSearch = ref<string>()
 const errMsgCreate = ref<string>()
 
+const sortOrder = ref('asc');
+const sortColumn = ref('');
 
 
-function makeAddList() {
+
+
+function makeBrandList() {
     if (selectedBrand.value !== null && !selectedBrands.value.includes(selectedBrand.value)) {
         selectedBrands.value.push(selectedBrand.value)
         selectedBrand.value = null
@@ -112,8 +116,6 @@ async function searchCategories() {
         cNames.push(cNames[0])
     }
 
-    searchNames.value = ''  // 검색칸 초기화
-
     const tables = Object.values(checkedItems.value)
     const product = tables.includes('product')
     const brand = tables.includes('brand')
@@ -136,7 +138,7 @@ async function searchCategories() {
 
 
 
-async function makeDeleteList() {
+async function makeCategoryList() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
         deleteNames.value.push(deleteName.value)
         deleteName.value = null
@@ -265,6 +267,40 @@ function getCategoryName(categoryId: number) {
     return category ? category.category_name : 'Unknown';
 }
 
+const sortedProducts = computed(() => {
+    const sorted = [...products.value];
+    sorted.sort((a, b) => {
+        const col = sortColumn.value;
+
+        // Add an index signature to the object type
+        const indexedA = a as Record<string, any>;
+        const indexedB = b as Record<string, any>;
+
+        if (sortOrder.value === 'asc') {
+            return indexedA[col] < indexedB[col] ? -1 : 1;
+        } else {
+            return indexedA[col] > indexedB[col] ? -1 : 1;
+        }
+    });
+    return sorted;
+});
+
+function sortProducts(column: string) {
+    // 같은 column 을 또 눌렀다면 정렬순서(sortOrder)를 변경
+    if (sortColumn.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        // 새로운 column 이라면 정렬된 열(sortColumn)을 바꾼 뒤 정렬순서를 오름차순으로 설정
+        sortColumn.value = column;
+        sortOrder.value = 'asc';
+    }
+}
+
+function showAllCategories() {
+    isProduct.value = false
+    isBrand.value = false
+}
+
 onMounted(async () => {
     await getBrands()
     await getCategories()
@@ -282,9 +318,9 @@ onMounted(async () => {
                     <input class="input" type="text" id="newNameInput" v-model="categoryName"
                         placeholder="Enter Category Name">
                 </div>
-                <div class="input-group">
+                <div class="select-group">
                     <label for="brandSelect">Relative Brands(Optional)</label>
-                    <select id="brandSelect" v-model="selectedBrand" @change.prevent="makeAddList">
+                    <select id="brandSelect" v-model="selectedBrand" @change.prevent="makeBrandList">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
@@ -298,13 +334,9 @@ onMounted(async () => {
                         </li>
                     </ul>
                 </div>
-                <div class="input-group">
-                    <button class="clear-button" @click.prevent="clearBrands">Clear Brands</button>
-                </div>
-                <div class="input-group">
-                    <button class="button" @click.prevent="createCategory" :disabled="!categoryName">Create
-                        Category</button>
-                </div>
+                <button class="button" @click.prevent="clearBrands">Clear Brands</button>
+                <button class="button" @click.prevent="createCategory" :disabled="!categoryName">Create
+                    Category</button>
             </form>
             <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
         </article>
@@ -313,16 +345,16 @@ onMounted(async () => {
         <article class="update">
             <h3>Update Category Name</h3>
             <form class="container" @submit.prevent="updateCategory">
-                <div class="update-group">
+                <div class="select-group">
                     <label for="updateSelect">Original Category Name</label>
                     <select id="updateSelect" v-model="updateID">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
                     </select>
-                    TO
-                    <input class="input" type="text" v-model="newCategoryName" placeholder="New Category name">
                 </div>
+                TO
+                <input class="input" type="text" v-model="newCategoryName" placeholder="New Category name">
                 <input class="button" type="submit" value="Update Category">
             </form>
         </article>
@@ -331,8 +363,8 @@ onMounted(async () => {
         <article class="delete">
             <h3>Remove Category Name</h3>
             <form @submit.prevent="deleteCategory" class="container">
-                <div class="delete-group">
-                    <select id="deleteSelect" v-model="deleteName" @change.prevent="makeDeleteList">
+                <div class="select-group">
+                    <select id="deleteSelect" v-model="deleteName" @change.prevent="makeCategoryList">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
@@ -348,13 +380,8 @@ onMounted(async () => {
                     </ul>
                 </div>
 
-                <div class="delete-group">
-                    <button class="clear-button" @click.prevent="clearDeleteList">Clear List</button>
-                </div>
-
-                <div class="delete-group">
-                    <input class="button" type="submit" value="Delete Categories" :disabled="deleteNames.length == 0">
-                </div>
+                <button class="button" @click.prevent="clearDeleteList">Clear List</button>
+                <input class="button" type="submit" value="Delete Categories" :disabled="deleteNames.length == 0">
             </form>
         </article>
 
@@ -362,13 +389,13 @@ onMounted(async () => {
         <article class="search">
             <h3>Look Up Category Names</h3>
             <form @submit.prevent="searchCategories" class="container">
-                <div class="search-group">
+                <div class="input-group">
                     <label for="searchNameInput">Search Names</label>
                     <input class="input" id="searchNameInput" type="text" v-model="searchNames"
                         placeholder="name, name, ...">
                 </div>
 
-                <div class="search-group">
+                <div class="check-group">
                     <input id="ch_brand" type="checkbox" v-model="checkedItems" value="brand"
                         @change.prevent="onCheckboxChange('brand')" />
                     <label for="ch_brand">For the brands(입력한 카테고리와 관련된 브랜드 목록)</label>
@@ -378,11 +405,15 @@ onMounted(async () => {
                     <label for="ch_product">For the products(입력한 카테고리와 관련된 제품 목록)</label>
                 </div>
 
-                <div class="search-group">
-                    <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
-                </div>
+                <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
             </form>
             <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
+        </article>
+
+
+        <article class="show">
+            <!-- 전체 브랜드 목록 보이기 -->
+            <label class="showAll-label clickable" @click="showAllCategories">Show All Categories</label>
         </article>
 
 
@@ -390,34 +421,48 @@ onMounted(async () => {
             <div v-if="isProduct">
                 <h2>Products</h2>
                 <div class="product-cards">
-                    <div v-for="product in products" :key="product.category_id" class="product-card">
-                        <template v-if="product.file_paths && product.file_paths.length > 0">
-                            <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
+                    <!-- 검색어가 입력되었을 때, 정렬된 제품 목록 표시 -->
+                    <div v-if="searchNames.length > 0">
+                        <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
+                        <div class="sort-labels">
+                            <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
+                            <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
+                            <label @click="sortProducts('sex')" class="sort-label clickable">Sex</label>
+                            <label @click="sortProducts('is_kids')" class="sort-label clickable">Kid/Adult</label>
+                            <label @click="sortProducts('category_id')" class="sort-label clickable">Category</label>
+                            <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
+                                Quantity</label>
+                        </div>
+                        <!-- 정렬된 product 목록 보이기 -->
+                        <div v-for="product in sortedProducts" :key="product.product_id" class="product-card">
+                            <template v-if="product.file_paths && product.file_paths.length > 0">
+                                <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
+                                    <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
+                                </div>
+                            </template>
+                            <div class="product-details">
+                                <h3>{{ product.product_name }}</h3>
+                                <p v-if="product.brand_id">
+                                    Brand: {{ getBrandName(product.brand_id) }}
+                                </p>
+                                <p>Sex: {{ product.sex }}</p>
+                                <p>Kid/Adult: {{ product.is_kids ? 'For Kids' : 'For Adults' }}</p>
+                                <p v-if="product.category_id">
+                                    Category: {{ getCategoryName(product.category_id) }}
+                                </p>
+                                <p>Sales Quantity: {{ product.sales_quantity }}</p>
                             </div>
-                        </template>
-                        <div class="product-details">
-                            <h3>{{ product.product_name }}</h3>
-                            <p v-if="product.brand_id">
-                                브랜드: {{ getBrandName(product.brand_id) }}
-                            </p>
-                            <p>성별: {{ product.sex }}</p>
-                            <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
-                            <p v-if="product.category_id">
-                                카테고리: {{ getCategoryName(product.category_id) }}
-                            </p>
-                            <p>판매량: {{ product.sales_quantity }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-else-if="isBrand">
+            <div v-else-if="isBrand" class="list-group">
                 <h2>Brands</h2>
                 <ul>
                     <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}</li>
                 </ul>
             </div>
-            <div v-else>
+            <div v-else class="list-group">
                 <h2>Categories</h2>
                 <ul>
                     <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}</li>
@@ -481,5 +526,19 @@ onMounted(async () => {
     color: red;
     font-weight: bold;
     margin-top: 10px;
+}
+
+/* 정렬 */
+.sort-labels {
+    display: flex;
+    gap: 10px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.sort-label:hover {
+    color: red;
 }
 </style>
