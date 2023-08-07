@@ -35,7 +35,7 @@ const sortColumn = ref('');
 
 
 
-function makeAddList() {
+function makeCategoryList() {
     if (selectedCategory.value !== null && !selectedCategories.value.includes(selectedCategory.value)) {
         selectedCategories.value.push(selectedCategory.value)
         selectedCategory.value = null
@@ -138,7 +138,7 @@ async function searchBrands() {
 
 
 
-async function makeDeleteList() {
+async function makeBrandList() {
     if (deleteName.value !== null && !deleteNames.value.includes(deleteName.value)) {
         deleteNames.value.push(deleteName.value)
         deleteName.value = null
@@ -266,9 +266,11 @@ const sortedProducts = computed(() => {
 });
 
 function sortProducts(column: string) {
+    // 같은 column 을 또 눌렀다면 정렬순서(sortOrder)를 변경
     if (sortColumn.value === column) {
         sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
     } else {
+        // 새로운 column 이라면 정렬된 열(sortColumn)을 바꾼 뒤 정렬순서를 오름차순으로 설정
         sortColumn.value = column;
         sortOrder.value = 'asc';
     }
@@ -290,18 +292,21 @@ onMounted(async () => {
         <article class="create">
             <h3>Add a new brand</h3>
             <form class="container">
+                <!-- 추가할 새로운 브랜드 이름 입력 -->
                 <div class="input-group">
                     <label for="newNameInput">Brand Name</label>
                     <input class="input" type="text" id="newNameInput" v-model="brandName" placeholder="Enter Brand Name">
                 </div>
-                <div class="input-group">
+                <!-- 입력된 브랜드와 관련된 카테고리 선택 -->
+                <div class="select-group">
                     <label for="categorySelect">Relative Category(Optional)</label>
-                    <select id="categorySelect" v-model="selectedCategory" @change.prevent="makeAddList">
+                    <select id="categorySelect" v-model="selectedCategory" @change.prevent="makeCategoryList">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
                     </select>
                 </div>
+                <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
                     <h4>Selected Categories:</h4>
                     <ul>
@@ -310,12 +315,8 @@ onMounted(async () => {
                         </li>
                     </ul>
                 </div>
-                <div class="input-group">
-                    <button class="clear-button" @click.prevent="clearCategories">Clear Categories</button>
-                </div>
-                <div class="input-group">
-                    <button class="button" @click.prevent="createBrand" :disabled="!brandName">Create Brand</button>
-                </div>
+                <button class="button" @click.prevent="clearCategories">Clear Categories</button>
+                <button class="button" @click.prevent="createBrand" :disabled="!brandName">Create Brand</button>
             </form>
             <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
         </article>
@@ -324,16 +325,18 @@ onMounted(async () => {
         <article class="update">
             <h3>Update Brand Name</h3>
             <form @submit.prevent="updateBrand" class="container">
-                <div class="update-group">
+                <div class="select-group">
+                    <!-- 수정할 브랜드 선택 -->
                     <label for="updateSelect">Original Brand Name</label>
                     <select id="updateSelect" v-model="updateID">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
-                    TO
-                    <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
                 </div>
+                TO
+                <!-- 바꿀 이름 입력 -->
+                <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
                 <input class="button" type="submit" value="Update Brand">
             </form>
         </article>
@@ -342,14 +345,15 @@ onMounted(async () => {
         <article class="delete">
             <h3>Remove Brand Name</h3>
             <form @submit.prevent="deleteBrand" class="container">
-                <div class="delete-group">
-                    <select id="deleteSelect" v-model="deleteName" @change.prevent="makeDeleteList">
+                <!-- 삭제할 브랜드 이름들 선택 -->
+                <div class="select-group">
+                    <select id="deleteSelect" v-model="deleteName" @change.prevent="makeBrandList">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
                 </div>
-
+                <!-- 선택된 브랜드 목록 -->
                 <div class="inputted-list">
                     <h4>Selected Brands:</h4>
                     <ul>
@@ -358,14 +362,9 @@ onMounted(async () => {
                         </li>
                     </ul>
                 </div>
-
-                <div class="delete-group">
-                    <button class="clear-button" @click.prevent="clearDeleteList">Clear List</button>
-                </div>
-
-                <div class="delete-group">
-                    <input class="button" type="submit" value="Delete Brands" :disabled="deleteNames.length == 0">
-                </div>
+                <!-- 선택된 목록 초기화 -->
+                <button class="button" @click.prevent="clearDeleteList">Clear List</button>
+                <input class="button" type="submit" value="Delete Brands" :disabled="deleteNames.length == 0">
             </form>
         </article>
 
@@ -374,13 +373,13 @@ onMounted(async () => {
             <h3>Look Up Brand Names</h3>
             <form @submit.prevent="searchBrands" class="container">
                 <!-- 검색어 입력 필드 -->
-                <div class="search-group">
+                <div class="input-group">
                     <label for="searchNameInput">Search Names</label>
                     <input class="input" id="searchNameInput" type="text" v-model="searchNames"
                         placeholder="name, name, ...">
                 </div>
-                <!-- 입력한 검색어와 관련된 자료 -->
-                <div class="search-group">
+                <!-- 입력한 검색어와 관련된 테이블 체크 -->
+                <div class="check-group">
                     <input id="ch_category" type="checkbox" v-model="checkedItems" value="category"
                         @change="onCheckboxChange('category')" />
                     <label for="ch_category">For the categories(입력한 브랜드와 관련된 카테고리 목록)</label>
@@ -389,15 +388,14 @@ onMounted(async () => {
                         @change="onCheckboxChange('product')" />
                     <label for="ch_product">For the products(입력한 브랜드와 관련된 제품 목록)</label>
                 </div>
-                <div class="search-group">
-                    <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
-                </div>
+                <input class="button" type="submit" value="Submit" :disabled="searchNames.length === 0">
             </form>
             <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
         </article>
 
 
         <article class="show">
+            <!-- 전체 브랜드 목록 보이기 -->
             <label class="showAll-label clickable" @click="showAllBrands">Show All Brands</label>
         </article>
 
@@ -408,6 +406,7 @@ onMounted(async () => {
                 <div class="product-cards">
                     <!-- 검색어가 입력되었을 때, 정렬된 제품 목록 표시 -->
                     <div v-if="searchNames.length > 0">
+                        <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
                         <div class="sort-labels">
                             <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
                             <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
@@ -417,6 +416,7 @@ onMounted(async () => {
                             <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
                                 Quantity</label>
                         </div>
+                        <!-- 정렬된 product 목록 보이기 -->
                         <div v-for="product in sortedProducts" :key="product.product_id" class="product-card">
                             <template v-if="product.file_paths && product.file_paths.length > 0">
                                 <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
@@ -439,14 +439,16 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <div v-else-if="isCategory">
+            <!-- 카테고리 목록 보이기 -->
+            <div v-else-if="isCategory" class="list-group">
                 <h2>Categories</h2>
                 <ul>
                     <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}
                     </li>
                 </ul>
             </div>
-            <div v-else>
+            <!-- 브랜드 목록 보이기 -->
+            <div v-else class="list-group">
                 <h2>Brands</h2>
                 <ul>
                     <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}
