@@ -30,8 +30,99 @@ let searchProductNames = ref<string[]>([])
 let searchBrandIDs: number[] = []
 let searchCategoryIDs: number[] = []
 let searchSexes: string[] = []
-let searchKids: boolean[] = []
+let searchKids: { id: number, value: boolean }[] = []
 let searchQtys: number[] = []
+
+
+
+async function addProduct() {
+    const path = 'product'
+
+    const newProduct = {
+        product_name: inputName.value,
+        brand_id: selectedBrand.value,
+        category_id: selectedCategory.value,
+        sex: selectedSex.value,
+        is_kids: selectedKidType.value,
+        sales_quantity: inputQty.value,
+        file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
+    }
+
+    try {
+        // 서버로 제품 추가 요청 보내기
+        await request.post(path, newProduct)
+
+        // 성공적으로 추가되면, 선택된 파일들 초기화
+        selectedFiles.value = []
+
+        // products 갱신
+        getProducts()
+    } catch (error) {
+        console.error('제품 추가 중 에러 발생', error)
+    }
+}
+
+
+
+function selectOption(column: string) {
+    let values: string[] = []
+    switch (column) {
+        case 'product_name':
+            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
+            searchProductNames.value.push(...values)
+            searchWords.value = ''
+            break;
+        case 'brand':
+            searchBrandIDs.push(selectedBrands.value)
+            selectedBrands.value = 0
+            break;
+        case 'category':
+            searchCategoryIDs.push(selectedCategories.value)
+            selectedCategories.value = 0
+            break;
+        case 'sex':
+            searchSexes.push(selectedSex.value)
+            selectedSex.value = ''
+            break;
+        case 'isKid':
+            if (selectedKidType.value !== undefined) {
+                searchKids.push(selectedKidType.value)
+                selectedKidType.value = undefined
+            }
+            break;
+        case 'sales_qty':
+            searchQtys.push(inputQty.value)
+            inputQty.value = 0
+            break;
+
+        default:
+            break;
+    }
+}
+
+async function searchProducts() {
+    await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
+    searchProductNames.value = [] // 검색어 초기화
+}
+
+function getBrandNameById(id: number) {
+    const brandsArray = Array.isArray(brands.value) ? brands.value : [];
+    const matchedBrand = brandsArray.find(brand => brand.brand_id === id);
+
+    return matchedBrand ? matchedBrand.brand_name : '';
+}
+
+function getCategoryNameById(id: number) {
+    const matchedCategory = categories.value.find(category => category.category_id === id);
+    return matchedCategory ? matchedCategory.category_name : '';
+}
+
+function getUsageByValue(type: boolean) {
+    const isKid = Boolean(type)
+    const result = isKid === true ? 'For Kids(아동용)' : 'For Adults(성인용)'
+    return result
+}
+
 
 
 async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys?: number[]) {
@@ -134,75 +225,6 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     await request.saveResult(path, response) // store에 저장
 }
 
-async function addProduct() {
-    const path = 'product'
-
-    const newProduct = {
-        product_name: inputName.value,
-        brand_id: selectedBrand.value,
-        category_id: selectedCategory.value,
-        sex: selectedSex.value,
-        is_kids: selectedKidType.value,
-        sales_quantity: inputQty.value,
-        file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
-    }
-
-    try {
-        // 서버로 제품 추가 요청 보내기
-        await request.post(path, newProduct)
-
-        // 성공적으로 추가되면, 선택된 파일들 초기화
-        selectedFiles.value = []
-
-        // products 갱신
-        getProducts()
-    } catch (error) {
-        console.error('제품 추가 중 에러 발생', error)
-    }
-}
-
-function selectOption(column: string) {
-    let values: string[] = []
-    switch (column) {
-        case 'product_name':
-            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
-            searchProductNames.value.push(...values)
-            searchWords.value = ''
-            break;
-        case 'brand':
-            searchBrandIDs.push(selectedBrands.value)
-            selectedBrands.value = 0
-            break;
-        case 'category':
-            searchCategoryIDs.push(selectedCategories.value)
-            selectedCategories.value = 0
-            break;
-        case 'sex':
-            searchSexes.push(selectedSex.value)
-            selectedSex.value = ''
-            break;
-        case 'isKid':
-            if (selectedKidType.value !== undefined) {
-                searchKids.push(selectedKidType.value)
-                selectedKidType.value = undefined
-            }
-            break;
-        case 'sales_qty':
-            searchQtys.push(inputQty.value)
-            inputQty.value = 0
-            break;
-
-        default:
-            break;
-    }
-}
-
-async function searchProducts() {
-    await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
-    searchProductNames.value = [] // 검색어 초기화
-}
-
-
 // null 혹은 undefined 처리
 function getBrandName(this: any, brandId: any) {
     const brand = this.brands.find((b: { brand_id: any; }) => b.brand_id === brandId);
@@ -252,6 +274,7 @@ onMounted(async () => {
         await getCategories()
         await getProducts()
     }
+
 })
 </script>
 
@@ -314,14 +337,14 @@ onMounted(async () => {
             <form @submit.prevent="searchProducts" class="container">
                 <!-- 검색어 입력 필드 -->
                 <div class="input-group">
-                    <label for="searchNamesInput">Search Names</label>
+                    <label for="searchNamesInput">Enter Names</label>
                     <input class="input" id="searchNamesInput" type="text" v-model="searchWords"
-                        placeholder="name, name, ..." @keydown.enter="selectOption('product_name')">
+                        placeholder="name, name, ..." @keydown.enter.prevent="selectOption('product_name')">
                     <button @click.prevent="selectOption('product_name')">Enter Names</button>
                 </div>
                 <!-- 검색 브랜드 선택 -->
                 <div class="select-group">
-                    <label for="brandSelect">Search Brands(optional)</label>
+                    <label for="brandSelect">Select Brands(optional)</label>
                     <select id="brandSelect" v-model="selectedBrands" @change.prevent="selectOption('brand')">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
@@ -330,7 +353,7 @@ onMounted(async () => {
                 </div>
                 <!-- 검색 카테고리 선택 -->
                 <div class="select-group">
-                    <label for="categorySelect">Search Categories(optional)</label>
+                    <label for="categorySelect">Select Categories(optional)</label>
                     <select id="categorySelect" v-model="selectedCategories" @change.prevent="selectOption('category')">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
@@ -339,23 +362,23 @@ onMounted(async () => {
                 </div>
                 <!-- 검색 성별 선택 -->
                 <div class="radio-group">
-                    <label>Search Sexes(optional)</label>
+                    <label>Choose Sexes(optional)</label>
 
-                    <input class="input" id="radio-male" type="radio" name="sex" value="남" v-model="selectedSex"
+                    <input class="input" id="radio-male" type="radio" name="sex" value="Male(남)" v-model="selectedSex"
                         @change.prevent="selectOption('sex')">
                     <label for="radio-male">Male(남)</label>
 
-                    <input class="input" id="radio-female" type="radio" name="sex" value="여" v-model="selectedSex"
+                    <input class="input" id="radio-female" type="radio" name="sex" value="Female(여)" v-model="selectedSex"
                         @change.prevent="selectOption('sex')">
                     <label for="radio-female">Female(여)</label>
 
-                    <input class="input" id="radio-unisex" type="radio" name="sex" value="공용" v-model="selectedSex"
+                    <input class="input" id="radio-unisex" type="radio" name="sex" value="Unisex(공용)" v-model="selectedSex"
                         @change.prevent="selectOption('sex')">
                     <label for="radio-unisex">Unisex(공용)</label>
                 </div>
                 <!-- 검색 성인용/아동용 선택 -->
                 <div class="check-group">
-                    <label>Search Usages(optional)</label>
+                    <label>Choose Usages(optional)</label>
 
                     <input class="input" id="check-kid" type="radio" name="kid" value="true" v-model="selectedKidType"
                         @change.prevent="selectOption('isKid')">
@@ -367,16 +390,41 @@ onMounted(async () => {
                 </div>
                 <!-- 검색 판매량 입력 -->
                 <div class="input-group">
-                    <label for="salesQtyInput">Sales Quantities(optional)</label>
-                    <input class="input" id="salesQtyInput" type="number" placeholder="판매량" min="1" v-model="inputQty"
-                        @keydown.enter="selectOption('sales_qty')">
+                    <label for="salesQtyInput">Enter Quantities(optional)</label>
+                    <input class="input" id="salesQtyInput" type="number" placeholder="판매량" min="0" v-model="inputQty"
+                        @keydown.enter.prevent="selectOption('sales_qty')">
                     <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
                 </div>
                 <!-- 검색 버튼 -->
                 <input class="button" type="submit" value="Submit" :disabled="searchProductNames.length === 0">
+                <!-- 선택된 카테고리 목록 -->
+                <div class="inputted-list">
+                    <h4>Selected Options:</h4>
+                    <ul>
+                        <label v-if="searchProductNames.length > 0" class="option-label">Entered Names</label>
+                        <li v-for="name in searchProductNames" :key="name" class="option-item">
+                            {{ name }}
+                        </li>
+                        <label v-if="searchBrandIDs.length > 0" class="option-label">Selected Brands</label>
+                        <li v-for="id in searchBrandIDs" :key="id" class="option-item">
+                            {{ getBrandNameById(id) }}
+                        </li>
+                        <label v-if="searchCategoryIDs.length > 0" class="option-label">Selected Categories</label>
+                        <li v-for="id in searchCategoryIDs" :key="id" class="option-item">
+                            {{ getCategoryNameById(id) }}
+                        </li>
+                        <label v-if="searchSexes.length > 0" class="option-label">Chosen Sexes</label>
+                        <li v-for="sex in searchSexes" :key="sex" class="option-item">
+                            {{ sex }}
+                        </li>
+                        <label v-if="searchKids.length > 0" class="option-label">Chosen Usages</label>
+                        <li v-for="type in searchKids" :key="type.id" class="option-item">
+                            {{ getUsageByValue(type.value) }}
+                        </li>
+                    </ul>
+                </div>
             </form>
         </article>
-
 
 
         <article class="list">
