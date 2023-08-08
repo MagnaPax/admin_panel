@@ -22,11 +22,9 @@ const selectedCategory = ref('')
 const selectedFiles = ref<File[]>([])
 const selectedFileError = ref({ isOverSized: false, isOverNumbers: false })
 
-const selectedkey = ref('')
 const selectedBrands = ref(0)
 const selectedCategories = ref(0)
 const searchWords = ref('')
-const structureProduct = ['product_name', 'brand', 'category', 'sex', 'kid', 'sales_qty']
 
 let searchProductNames = ref<string[]>([])
 let searchBrandIDs: number[] = []
@@ -163,9 +161,9 @@ async function addProduct() {
     }
 }
 
-function addValue() {
+function selectOption(column: string) {
     let values: string[] = []
-    switch (selectedkey.value) {
+    switch (column) {
         case 'product_name':
             values = searchWords.value.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
             searchProductNames.value.push(...values)
@@ -183,7 +181,7 @@ function addValue() {
             searchSexes.push(selectedSex.value)
             selectedSex.value = ''
             break;
-        case 'kid':
+        case 'isKid':
             if (selectedKidType.value !== undefined) {
                 searchKids.push(selectedKidType.value)
                 selectedKidType.value = undefined
@@ -201,7 +199,7 @@ function addValue() {
 
 async function searchProducts() {
     await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
-    searchProductNames.value = []
+    searchProductNames.value = [] // 검색어 초기화
 }
 
 
@@ -313,57 +311,69 @@ onMounted(async () => {
 
         <article class="search">
             <h3>Look Up Product Names</h3>
-            <form @submit.prevent="searchProducts">
-                <div>찾을 목록 선택</div>
-                <div class="menu">
-                    <select id="keySelect" v-model="selectedkey">
-                        <option v-for="(key, i) in structureProduct" :key="i" :value="key">
-                            {{ key }}
+            <form @submit.prevent="searchProducts" class="container">
+                <!-- 검색어 입력 필드 -->
+                <div class="input-group">
+                    <label for="searchNamesInput">Search Names</label>
+                    <input class="input" id="searchNamesInput" type="text" v-model="searchWords"
+                        placeholder="name, name, ..." @keydown.enter="selectOption('product_name')">
+                    <button @click.prevent="selectOption('product_name')">Enter Names</button>
+                </div>
+                <!-- 검색 브랜드 선택 -->
+                <div class="select-group">
+                    <label for="brandSelect">Search Brands(optional)</label>
+                    <select id="brandSelect" v-model="selectedBrands" @change.prevent="selectOption('brand')">
+                        <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
+                            {{ brand.brand_name }}
                         </option>
                     </select>
                 </div>
-                <div>검색 단어 입력 OR 선택</div>
-                <div v-if="selectedkey === 'product_name'">
-                    <input class="input" type="text" v-model="searchWords" placeholder="찾을 단어">
+                <!-- 검색 카테고리 선택 -->
+                <div class="select-group">
+                    <label for="categorySelect">Search Categories(optional)</label>
+                    <select id="categorySelect" v-model="selectedCategories" @change.prevent="selectOption('category')">
+                        <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
+                            {{ category.category_name }}
+                        </option>
+                    </select>
                 </div>
-                <div v-else-if="selectedkey === 'brand'">
-                    <div class="menu">
-                        <select id="brandSelect" v-model="selectedBrands">
-                            <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
-                                {{ brand.brand_name }}
-                            </option>
-                        </select>
-                    </div>
+                <!-- 검색 성별 선택 -->
+                <div class="radio-group">
+                    <label>Search Sexes(optional)</label>
+
+                    <input class="input" id="radio-male" type="radio" name="sex" value="남" v-model="selectedSex"
+                        @change.prevent="selectOption('sex')">
+                    <label for="radio-male">Male(남)</label>
+
+                    <input class="input" id="radio-female" type="radio" name="sex" value="여" v-model="selectedSex"
+                        @change.prevent="selectOption('sex')">
+                    <label for="radio-female">Female(여)</label>
+
+                    <input class="input" id="radio-unisex" type="radio" name="sex" value="공용" v-model="selectedSex"
+                        @change.prevent="selectOption('sex')">
+                    <label for="radio-unisex">Unisex(공용)</label>
                 </div>
-                <div v-else-if="selectedkey === 'category'">
-                    <div class="menu">
-                        <select id="categorySelect" v-model="selectedCategories">
-                            <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
-                                {{ category.category_name }}
-                            </option>
-                        </select>
-                    </div>
+                <!-- 검색 성인용/아동용 선택 -->
+                <div class="check-group">
+                    <label>Search Usages(optional)</label>
+
+                    <input class="input" id="check-kid" type="radio" name="kid" value="true" v-model="selectedKidType"
+                        @change.prevent="selectOption('isKid')">
+                    <label for="check-kid">For Kids(아동용)</label>
+
+                    <input class="input" id="check-adult" type="radio" name="adult" value="false" v-model="selectedKidType"
+                        @change.prevent="selectOption('isKid')">
+                    <label for="check-adult">For Adults(성인용)</label>
                 </div>
-                <div v-else-if="selectedkey === 'sex'">
-                    <div class="input-container">
-                        <input class="input" type="radio" name="sex" value="남" v-model="selectedSex">남
-                        <input class="input" type="radio" name="sex" value="여" v-model="selectedSex">여
-                        <input class="input" type="radio" name="sex" value="공용" v-model="selectedSex">공용
-                    </div>
+                <!-- 검색 판매량 입력 -->
+                <div class="input-group">
+                    <label for="salesQtyInput">Sales Quantities(optional)</label>
+                    <input class="input" id="salesQtyInput" type="number" placeholder="판매량" min="1" v-model="inputQty"
+                        @keydown.enter="selectOption('sales_qty')">
+                    <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
                 </div>
-                <div v-else-if="selectedkey === 'kid'">
-                    <div class="input-container">
-                        <input class="input" type="radio" name="kid" value="true" v-model="selectedKidType">아동용
-                        <input class="input" type="radio" name="kid" value="false" v-model="selectedKidType">성인용
-                    </div>
-                </div>
-                <div v-else-if="selectedkey === 'sales_qty'">
-                    <div class="input-container">
-                        <input class="input" type="number" placeholder="판매량" min="1" v-model="inputQty">
-                    </div>
-                </div>
-                <button @click.prevent="addValue()">Add</button>
-                <input class="button" type="submit" value="검색" :disabled="searchProductNames.length === 0">
+                <!-- 검색 버튼 -->
+                <input class="button" type="submit" value="Submit" :disabled="searchProductNames.length === 0">
             </form>
         </article>
 
