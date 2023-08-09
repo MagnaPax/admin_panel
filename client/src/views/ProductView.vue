@@ -265,8 +265,8 @@ function accumulateList(e: any) {
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        if (file.size > 1000000) {
-            console.error('파일 크기가 1MB 넘는 파일이 있다')
+        if (file.size > 300000) {
+            console.error('파일 크기가 300KB(0.3MB) 넘는 파일이 있다')
             selectedFileError.value.isOverSized = true
             return;
         }

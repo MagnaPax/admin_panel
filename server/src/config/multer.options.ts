@@ -22,7 +22,7 @@ export const multerOptions: MulterOptions = {
     },
   }),
   limits: {
-    // 파일 사이즈 1MB
-    fileSize: 1048576,
+    // 파일 사이즈 300KB(0.3MB)
+    fileSize: 300000,
   },
 };
