@@ -15,7 +15,7 @@ const products = computed(() => counterStore.productList)
 
 const inputName = ref('')
 const selectedSex = ref('')
-const inputQty = ref(0)
+const inputQty = ref<number>()
 const selectedKidType = ref<boolean>()
 const selectedBrand = ref('')
 const selectedCategory = ref('')
@@ -85,24 +85,23 @@ function selectOption(column: string) {
             selectedSex.value = ''
             break;
         case 'isKid':
-            if (selectedKidType.value !== undefined) {
-                searchKids.push(selectedKidType.value)
-                selectedKidType.value = undefined
-            }
+            selectedKidType.value !== undefined
+                ? searchKids.push({ id: searchKids.length + 1, value: selectedKidType.value })
+                : null;
+
+            selectedKidType.value = undefined
             break;
         case 'sales_qty':
-            searchQtys.push(inputQty.value)
-            inputQty.value = 0
+            typeof inputQty.value === 'number'
+                ? searchQtys.push(inputQty.value)
+                : undefined
+
+            inputQty.value = undefined
             break;
 
         default:
             break;
     }
-}
-
-async function searchProducts() {
-    await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
-    searchProductNames.value = [] // 검색어 초기화
 }
 
 function getBrandNameById(id: number) {
@@ -117,15 +116,28 @@ function getCategoryNameById(id: number) {
     return matchedCategory ? matchedCategory.category_name : '';
 }
 
-function getUsageByValue(type: boolean) {
-    const isKid = Boolean(type)
-    const result = isKid === true ? 'For Kids(아동용)' : 'For Adults(성인용)'
-    return result
+function getUsageByValue(isKid: boolean | string): string {
+    const result = isKid === true || isKid === "true" ? 'For Kids(아동용)' : 'For Adults(성인용)';
+    return result;
+}
+
+function clearSearchInputs() {
+    searchProductNames.value = []
+    searchSexes = []
+    searchBrandIDs = []
+    searchCategoryIDs = []
+    searchKids = []
+    searchQtys = []
+}
+
+async function searchProducts() {
+    await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
+    clearSearchInputs() // 검색어 초기화
 }
 
 
 
-async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: boolean[], Qtys?: number[]) {
+async function getProducts(path: string = 'product', productNames?: string[], sexes?: string[], brandIDs?: number[], categoryIDs?: number[], IsKids?: { id: number, value: boolean }[], Qtys?: number[]) {
     let fullURL: string = ''
 
     if (productNames && productNames.length > 0) {
@@ -150,7 +162,7 @@ async function getProducts(path: string = 'product', productNames?: string[], se
     }
     if (IsKids && IsKids.length > 0) {
         IsKids.forEach((kid) => {
-            fullURL += `&is_kids=${kid}`
+            fullURL += `&is_kids=${kid.value}`
         })
     }
     if (Qtys && Qtys.length > 0) {
@@ -225,15 +237,15 @@ async function getBrands(path: string = 'brand', brandNames?: string[], category
     await request.saveResult(path, response) // store에 저장
 }
 
-// null 혹은 undefined 처리
-function getBrandName(this: any, brandId: any) {
-    const brand = this.brands.find((b: { brand_id: any; }) => b.brand_id === brandId);
+function getBrandName(brandId: number) {
+    // brandId 가 null혹은 undefined일 때
+    const brand = brands.value.find((b) => b.brand_id === brandId);
     return brand ? brand.brand_name : 'Unknown';
 }
 
-// null 혹은 undefined 처리
-function getCategoryName(this: any, categoryId: any) {
-    const category = this.categories.find((c: { category_id: any; }) => c.category_id === categoryId);
+function getCategoryName(categoryId: number) {
+    // categoryId가 null 혹은 undefined일 때
+    const category = categories.value.find((c) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
 }
 
@@ -395,8 +407,6 @@ onMounted(async () => {
                         @keydown.enter.prevent="selectOption('sales_qty')">
                     <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
                 </div>
-                <!-- 검색 버튼 -->
-                <input class="button" type="submit" value="Submit" :disabled="searchProductNames.length === 0">
                 <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
                     <h4>Selected Options:</h4>
@@ -418,11 +428,19 @@ onMounted(async () => {
                             {{ sex }}
                         </li>
                         <label v-if="searchKids.length > 0" class="option-label">Chosen Usages</label>
-                        <li v-for="type in searchKids" :key="type.id" class="option-item">
-                            {{ getUsageByValue(type.value) }}
+                        <li v-for="isKid in searchKids" :key="isKid.id" class="option-item">
+                            {{ getUsageByValue(isKid.value) }}
+                        </li>
+                        <label v-if="searchQtys.length > 0" class="option-label">Entered Quantities</label>
+                        <li v-for="qty in searchQtys" :key="qty" class="option-item">
+                            {{ qty }}
                         </li>
                     </ul>
                 </div>
+                <!-- 입력한 조건 초기화 -->
+                <button class="button" @click.prevent="clearSearchInputs">Clear Options & Inputs</button>
+                <!-- 검색 버튼 -->
+                <input class="button" type="submit" value="Search">
             </form>
         </article>
 
