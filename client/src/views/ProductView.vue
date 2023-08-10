@@ -33,6 +33,11 @@ let searchSexes: string[] = []
 let searchKids: { id: number, value: boolean }[] = []
 let searchQtys: number[] = []
 
+const sortOrder = ref('asc');
+const sortColumn = ref('');
+const isSearched = ref<boolean>(false)
+
+
 
 
 async function addProduct() {
@@ -133,6 +138,12 @@ function clearSearchInputs() {
 async function searchProducts() {
     await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
     clearSearchInputs() // 검색어 초기화
+    isSearched.value = true
+}
+
+async function showAllProducts() {
+    isSearched.value = false
+    await getProducts()
 }
 
 
@@ -247,6 +258,35 @@ function getCategoryName(categoryId: number) {
     // categoryId가 null 혹은 undefined일 때
     const category = categories.value.find((c) => c.category_id === categoryId);
     return category ? category.category_name : 'Unknown';
+}
+
+const sortedProducts = computed(() => {
+    const sorted = [...products.value];
+    sorted.sort((a, b) => {
+        const col = sortColumn.value;
+
+        // Add an index signature to the object type
+        const indexedA = a as Record<string, any>;
+        const indexedB = b as Record<string, any>;
+
+        if (sortOrder.value === 'asc') {
+            return indexedA[col] < indexedB[col] ? -1 : 1;
+        } else {
+            return indexedA[col] > indexedB[col] ? -1 : 1;
+        }
+    });
+    return sorted;
+});
+
+function sortProducts(column: string) {
+    // 같은 column 을 또 눌렀다면 정렬순서(sortOrder)를 변경
+    if (sortColumn.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        // 새로운 column 이라면 정렬된 열(sortColumn)을 바꾼 뒤 정렬순서를 오름차순으로 설정
+        sortColumn.value = column;
+        sortOrder.value = 'asc';
+    }
 }
 
 
@@ -403,8 +443,8 @@ onMounted(async () => {
                 <!-- 검색 판매량 입력 -->
                 <div class="input-group">
                     <label for="salesQtyInput">Enter Quantities(optional)</label>
-                    <input class="input" id="salesQtyInput" type="number" placeholder="판매량" min="0" v-model="inputQty"
-                        @keydown.enter.prevent="selectOption('sales_qty')">
+                    <input class="input" id="salesQtyInput" type="number" placeholder="Sales Quantity" min="0"
+                        v-model="inputQty" @keydown.enter.prevent="selectOption('sales_qty')">
                     <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
                 </div>
                 <!-- 선택된 카테고리 목록 -->
@@ -445,10 +485,34 @@ onMounted(async () => {
         </article>
 
 
+        <article class="show">
+            <!-- 전체 제품 목록 보이기 -->
+            <label class="showAll-label clickable" @click="showAllProducts">Show All Products</label>
+        </article>
+
+
         <article class="list">
-            <h2>Products</h2>
+            <!-- 검색 버튼이 클릭됐을 때 정렬된 제품 목록 표시 -->
+            <div v-if="isSearched">
+                <h2>Searched Results</h2>
+                <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
+                <div class="sort-labels">
+                    <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
+                    <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
+                    <label @click="sortProducts('sex')" class="sort-label clickable">Sex</label>
+                    <label @click="sortProducts('is_kids')" class="sort-label clickable">Kid/Adult</label>
+                    <label @click="sortProducts('category_id')" class="sort-label clickable">Category</label>
+                    <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
+                        Quantity</label>
+                </div>
+            </div>
+            <div v-else class="list-group">
+                <h2>Products</h2>
+            </div>
             <div class="product-cards">
-                <div v-for="product in products" :key="product.category_id" class="product-card">
+                <!-- 검색 버튼의 클릭 여부에 따라 정렬된목록 or 전체목록 보이기-->
+                <div v-for="product in (isSearched ? sortedProducts : products)" :key="product.product_id"
+                    class="product-card">
                     <template v-if="product.file_paths && product.file_paths.length > 0">
                         <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
                             <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
@@ -457,14 +521,14 @@ onMounted(async () => {
                     <div class="product-details">
                         <h3>{{ product.product_name }}</h3>
                         <p v-if="product.brand_id">
-                            브랜드: {{ getBrandName(product.brand_id) }}
+                            Brand: {{ getBrandName(product.brand_id) }}
                         </p>
-                        <p>성별: {{ product.sex }}</p>
-                        <p>용도: {{ product.is_kids ? '아동용' : '성인용' }}</p>
+                        <p>Sex: {{ product.sex }}</p>
+                        <p>Kid/Adult: {{ product.is_kids ? 'For Kids' : 'For Adults' }}</p>
                         <p v-if="product.category_id">
-                            카테고리: {{ getCategoryName(product.category_id) }}
+                            Category: {{ getCategoryName(product.category_id) }}
                         </p>
-                        <p>판매량: {{ product.sales_quantity }}</p>
+                        <p>Sales Quantity: {{ product.sales_quantity }}</p>
                     </div>
                 </div>
             </div>
@@ -540,5 +604,19 @@ onMounted(async () => {
 
 .product-wrapper .list li {
     margin-bottom: 5px;
+}
+
+/* 정렬 */
+.sort-labels {
+    display: flex;
+    gap: 10px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.sort-label:hover {
+    color: red;
 }
 </style>
