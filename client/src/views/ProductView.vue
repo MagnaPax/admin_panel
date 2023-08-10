@@ -494,7 +494,7 @@ onMounted(async () => {
         <article class="list">
             <!-- 검색 버튼이 클릭됐을 때 정렬된 제품 목록 표시 -->
             <div v-if="isSearched">
-                <h2>Searched Results</h2>
+                <h2>Searched Products</h2>
                 <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
                 <div class="sort-labels">
                     <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
@@ -507,7 +507,7 @@ onMounted(async () => {
                 </div>
             </div>
             <div v-else class="list-group">
-                <h2>Products</h2>
+                <h2>All Products</h2>
             </div>
             <div class="product-cards">
                 <!-- 검색 버튼의 클릭 여부에 따라 정렬된목록 or 전체목록 보이기-->
