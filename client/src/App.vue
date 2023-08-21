@@ -7,24 +7,12 @@ import SideBar from '@/components/SideBar.vue'
 </script>
 
 <template>
-  <body>
+  <SideBar />
+  <all-contents>
     <Header />
-    <SideBar />
     <main>
       <RouterView />
     </main>
     <Footer />
-  </body>
+  </all-contents>
 </template>
-
-<style scoped>
-main {
-  margin-left: 220px;
-  /* Adjust the value to create space for the sidebar */
-  margin-top: 60px;
-  /* Adjust the value to create space for the header */
-  margin-bottom: 40px;
-  /* Adjust the value to create space for the footer */
-  padding: 20px;
-}
-</style>
