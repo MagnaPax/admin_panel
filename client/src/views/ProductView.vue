@@ -449,7 +449,7 @@ onMounted(async () => {
                 </div>
                 <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
-                    <h4>Selected Options:</h4>
+                    <label>Selected Options:</label>
                     <ul>
                         <label v-if="searchProductNames.length > 0" class="option-label">Entered Names</label>
                         <li v-for="name in searchProductNames" :key="name" class="option-item">
@@ -476,9 +476,9 @@ onMounted(async () => {
                             {{ qty }}
                         </li>
                     </ul>
+                    <!-- 입력한 조건 초기화 -->
+                    <button class="input-reset-button" @click.prevent="clearSearchInputs">Clear Options & Inputs</button>
                 </div>
-                <!-- 입력한 조건 초기화 -->
-                <button class="button" @click.prevent="clearSearchInputs">Clear Options & Inputs</button>
                 <!-- 검색 버튼 -->
                 <input class="button" type="submit" value="Search">
             </form>
@@ -494,7 +494,7 @@ onMounted(async () => {
         <article class="list">
             <!-- 검색 버튼이 클릭됐을 때 정렬된 제품 목록 표시 -->
             <div v-if="isSearched">
-                <h2>Searched Products</h2>
+                <h3>Searched Products</h3>
                 <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
                 <div class="sort-labels">
                     <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
@@ -507,7 +507,7 @@ onMounted(async () => {
                 </div>
             </div>
             <div v-else class="list-group">
-                <h2>All Products</h2>
+                <h3>All Products</h3>
             </div>
             <div class="product-cards">
                 <!-- 검색 버튼의 클릭 여부에 따라 정렬된목록 or 전체목록 보이기-->

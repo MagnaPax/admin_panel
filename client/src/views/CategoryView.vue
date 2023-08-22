@@ -327,14 +327,15 @@ onMounted(async () => {
                     </select>
                 </div>
                 <div class="inputted-list">
-                    <h4>Selected Brands:</h4>
+                    <label>Selected Brands:</label>
                     <ul>
                         <li v-for="id in selectedBrands" :key="id">
                             {{ getBrandNameById(id) }}
                         </li>
                     </ul>
+                    <!-- 선택된 목록 초기화 -->
+                    <button class="input-reset-button" @click.prevent="clearBrands">Clear Brands</button>
                 </div>
-                <button class="button" @click.prevent="clearBrands">Clear Brands</button>
                 <button class="button" @click.prevent="createCategory" :disabled="!categoryName">Create
                     Category</button>
             </form>
@@ -353,7 +354,7 @@ onMounted(async () => {
                         </option>
                     </select>
                 </div>
-                TO
+                <div class="from-to">TO</div>
                 <input class="input" type="text" v-model="newCategoryName" placeholder="New Category name">
                 <input class="button" type="submit" value="Update Category">
             </form>
@@ -372,15 +373,15 @@ onMounted(async () => {
                 </div>
 
                 <div class="inputted-list">
-                    <h4>Selected Categories:</h4>
+                    <label>Selected Categories:</label>
                     <ul>
                         <li v-for="id in deleteNames" :key="id">
                             {{ getCategoryNameById(id) }}
                         </li>
                     </ul>
+                    <!-- 선택된 목록 초기화 -->
+                    <button class="input-reset-button" @click.prevent="clearDeleteList">Clear List</button>
                 </div>
-
-                <button class="button" @click.prevent="clearDeleteList">Clear List</button>
                 <input class="button" type="submit" value="Delete Categories" :disabled="deleteNames.length == 0">
             </form>
         </article>
@@ -420,7 +421,7 @@ onMounted(async () => {
         <article class="list">
             <!-- 검색어가 입력되었을 때, 정렬된 제품 목록 표시 -->
             <div v-if="isProduct">
-                <h2>Products</h2>
+                <h3>Products</h3>
                 <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
                 <div class="sort-labels">
                     <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
@@ -455,13 +456,13 @@ onMounted(async () => {
                 </div>
             </div>
             <div v-else-if="isBrand" class="list-group">
-                <h2>Brands</h2>
+                <h3>Brands</h3>
                 <ul>
                     <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}</li>
                 </ul>
             </div>
             <div v-else class="list-group">
-                <h2>Categories</h2>
+                <h3>Categories</h3>
                 <ul>
                     <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}</li>
                 </ul>

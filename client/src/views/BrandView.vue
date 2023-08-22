@@ -308,14 +308,15 @@ onMounted(async () => {
                 </div>
                 <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
-                    <h4>Selected Categories:</h4>
+                    <label>Selected Categories:</label>
                     <ul>
                         <li v-for="id in selectedCategories" :key="id">
                             {{ getCategoryNameById(id) }}
                         </li>
                     </ul>
+                    <!-- 선택된 목록 초기화 -->
+                    <button class="input-reset-button" @click.prevent="clearCategories">Clear Categories</button>
                 </div>
-                <button class="button" @click.prevent="clearCategories">Clear Categories</button>
                 <button class="button" @click.prevent="createBrand" :disabled="!brandName">Create Brand</button>
             </form>
             <div v-if="errMsgCreate" class="error-message">{{ errMsgCreate }}</div>
@@ -334,7 +335,7 @@ onMounted(async () => {
                         </option>
                     </select>
                 </div>
-                TO
+                <div class="from-to">TO</div>
                 <!-- 바꿀 이름 입력 -->
                 <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
                 <input class="button" type="submit" value="Update Brand">
@@ -343,7 +344,7 @@ onMounted(async () => {
 
 
         <article class="delete">
-            <h3>Remove Brand Name</h3>
+            <h3>Remove Brand Names</h3>
             <form @submit.prevent="deleteBrand" class="container">
                 <!-- 삭제할 브랜드 이름들 선택 -->
                 <div class="select-group">
@@ -355,15 +356,15 @@ onMounted(async () => {
                 </div>
                 <!-- 선택된 브랜드 목록 -->
                 <div class="inputted-list">
-                    <h4>Selected Brands:</h4>
+                    <label>Selected Brands:</label>
                     <ul>
                         <li v-for="id in deleteNames" :key="id">
                             {{ getBrandNameById(id) }}
                         </li>
                     </ul>
+                    <!-- 선택된 목록 초기화 -->
+                    <button class="input-reset-button" @click.prevent="clearDeleteList">Clear List</button>
                 </div>
-                <!-- 선택된 목록 초기화 -->
-                <button class="button" @click.prevent="clearDeleteList">Clear List</button>
                 <input class="button" type="submit" value="Delete Brands" :disabled="deleteNames.length == 0">
             </form>
         </article>
@@ -403,7 +404,7 @@ onMounted(async () => {
         <article class="list">
             <!-- 검색어가 입력되었을 때, 정렬된 제품 목록 표시 -->
             <div v-if="isProduct">
-                <h2>Products</h2>
+                <h3>Products</h3>
                 <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
                 <div class="sort-labels">
                     <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
@@ -439,7 +440,7 @@ onMounted(async () => {
             </div>
             <!-- 카테고리 목록 보이기 -->
             <div v-else-if="isCategory" class="list-group">
-                <h2>Categories</h2>
+                <h3>Categories</h3>
                 <ul>
                     <li v-for="category in categories" :key="category.category_id">{{ category.category_name }}
                     </li>
@@ -447,7 +448,7 @@ onMounted(async () => {
             </div>
             <!-- 브랜드 목록 보이기 -->
             <div v-else class="list-group">
-                <h2>Brands</h2>
+                <h3>Brands</h3>
                 <ul>
                     <li v-for="brand in brands" :key="brand.brand_id">{{ brand.brand_name }}
                     </li>
@@ -456,74 +457,3 @@ onMounted(async () => {
         </article>
     </section>
 </template>
-
-<style scoped>
-.brand-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
-}
-
-.brand-wrapper form {
-    margin-bottom: 20px;
-}
-
-.brand-wrapper label {
-    margin-bottom: 10px;
-}
-
-.brand-wrapper .menu {
-    display: flex;
-    align-items: center;
-}
-
-.brand-wrapper .inputted_category {
-    margin-bottom: 20px;
-}
-
-.brand-wrapper .inputted_category ul {
-    list-style: none;
-    padding: 0;
-}
-
-.brand-wrapper .inputted_category li {
-    margin-bottom: 5px;
-}
-
-.brand-wrapper .list {
-    margin-top: 20px;
-}
-
-.brand-wrapper .list ul {
-    list-style: none;
-    padding: 0;
-}
-
-.brand-wrapper .list li {
-    margin-bottom: 5px;
-}
-
-/* 에러 메시지 스타일 */
-.error-message {
-    color: red;
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-/* 정렬 */
-.sort-labels {
-    display: flex;
-    gap: 10px;
-}
-
-.clickable {
-    cursor: pointer;
-}
-
-.sort-label:hover {
-    color: red;
-}
-</style>
