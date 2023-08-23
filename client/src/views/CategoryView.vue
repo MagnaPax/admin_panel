@@ -327,7 +327,7 @@ onMounted(async () => {
                     </select>
                 </div>
                 <div class="inputted-list">
-                    <label>Selected Brands:</label>
+                    <label>Selected Brands</label>
                     <ul>
                         <li v-for="id in selectedBrands" :key="id">
                             {{ getBrandNameById(id) }}
@@ -354,7 +354,7 @@ onMounted(async () => {
                         </option>
                     </select>
                 </div>
-                <div class="from-to">TO</div>
+                <label class="from-to">TO</label>
                 <input class="input" type="text" v-model="newCategoryName" placeholder="New Category name">
                 <input class="button" type="submit" value="Update Category">
             </form>

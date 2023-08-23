@@ -4,7 +4,7 @@
 <template>
   <section class="information">
     <article>
-      <div>한천희</div>
+      <div>한천희 HAN, Chunhee</div>
       <div>chunhee.han@outlook.com</div>
     </article>
   </section>

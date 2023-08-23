@@ -14,8 +14,10 @@ const categories = computed(() => counterStore.categoryList)
 const products = computed(() => counterStore.productList)
 
 const inputName = ref('')
+const selectedSexForCreate = ref('')
 const selectedSex = ref('')
 const inputQty = ref<number>()
+const selectedKidTypeForCreate = ref<boolean>()
 const selectedKidType = ref<boolean>()
 const selectedBrand = ref('')
 const selectedCategory = ref('')
@@ -47,8 +49,8 @@ async function addProduct() {
         product_name: inputName.value,
         brand_id: selectedBrand.value,
         category_id: selectedCategory.value,
-        sex: selectedSex.value,
-        is_kids: selectedKidType.value,
+        sex: selectedSexForCreate.value,
+        is_kids: selectedKidTypeForCreate.value,
         sales_quantity: inputQty.value,
         file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
     }
@@ -65,6 +67,10 @@ async function addProduct() {
     } catch (error) {
         console.error('제품 추가 중 에러 발생', error)
     }
+}
+
+function clearSelectedFiles() {
+    selectedFiles.value = []
 }
 
 
@@ -334,50 +340,88 @@ onMounted(async () => {
     <section class="wrapper">
         <article class="create">
             <h3>Add a new Product</h3>
-            <form @submit.prevent="addProduct" method="post" enctype="multipart/form-data">
-                <div class="input-container">
-                    <input class="input" type="text" placeholder="제품이름" v-model="inputName">
+            <form class="container" @submit.prevent="addProduct" method="post" enctype="multipart/form-data">
+                <!-- 제품 이름 -->
+                <div class="input-group">
+                    <label for="newNameInput">Product Name</label>
+                    <input class="input" type="text" id="newNameInput" placeholder="제품이름" v-model="inputName">
                 </div>
-                <div class="input-container">
-                    <input class="input" type="radio" name="sex" value="남" v-model="selectedSex">남
-                    <input class="input" type="radio" name="sex" value="여" v-model="selectedSex">여
-                    <input class="input" type="radio" name="sex" value="공용" v-model="selectedSex">공용
+                <!-- 성별 -->
+                <div class="radio-group">
+                    <label class="title">Sex</label>
+
+                    <div class="radio-inputs"> <!-- flex 에서 벗어나기 위한 div -->
+                        <input class="input" id="radio-male-create" type="radio" name="sex" value="Male(남)"
+                            v-model="selectedSexForCreate">
+                        <label for="radio-male-create">Male</label>
+
+                        <input class="input" id="radio-female-create" type="radio" name="sex" value="Female(여)"
+                            v-model="selectedSexForCreate">
+                        <label for="radio-female-create">Female</label>
+
+                        <input class="input" id="radio-unisex-create" type="radio" name="sex" value="Unisex(공용)"
+                            v-model="selectedSexForCreate">
+                        <label for="radio-unisex-create">Unisex</label>
+                    </div>
                 </div>
-                <div class="input-container">
+                <!-- 아동용/성인용 -->
+                <div class="radio-group">
+                    <label class="title">Usage</label>
+
+                    <div class="radio-inputs">
+                        <input class="input" id="check-kid-create" type="radio" name="kid" value="true"
+                            v-model="selectedKidTypeForCreate">
+                        <label for="check-kid-create">For Kids</label>
+
+                        <input class="input" id="check-adult-create" type="radio" name="adult" value="false"
+                            v-model="selectedKidTypeForCreate">
+                        <label for="check-adult-create">For Adults</label>
+                    </div>
+                </div>
+                <!-- 판매 갯수 -->
+                <div class="input-group">
+                    <label class="title">Quantity</label>
                     <input class="input" type="number" min="1" v-model="inputQty">
                 </div>
-                <div class="input-container">
-                    <input class="input" type="radio" name="kid" :value="true" v-model="selectedKidType">아동용
-                    <input class="input" type="radio" name="kid" :value="false" v-model="selectedKidType">성인용
-                </div>
-
-                <div class="menu">
-                    <select id="brandSelect" v-model="selectedBrand">
+                <!-- 관련 브랜드 -->
+                <div class="select-group">
+                    <label>Relative Brand(Optional)</label>
+                    <select v-model="selectedBrand">
                         <option v-for="(brand, i) in brands" :key="i" :value="brand.brand_id">
                             {{ brand.brand_name }}
                         </option>
                     </select>
                 </div>
-                <div class="menu">
+                <!-- 관련 카테고리 -->
+                <div class="select-group">
+                    <label>Relative Category(Optional)</label>
                     <select id="categorySelect" v-model="selectedCategory">
                         <option v-for="(category, i) in categories" :key="i" :value="category.category_id">
                             {{ category.category_name }}
                         </option>
                     </select>
                 </div>
+                <!-- 파일 업로드 -->
+                <div class="img-upload-group">
+                    <label class="title">Images(Optional)</label>
 
-                <div class="input-container">
-                    <input class="input" type="file" name="imgs" accept="image/*" @change="accumulateList" max="3" multiple>
+                    <input class="file" type="file" name="imgs" accept="image/*" @change="accumulateList" max="3" multiple>
                     <span v-if="selectedFileError.isOverSized">선택한 파일 중 1MB를 초과하는 파일이 있습니다.</span>
                     <span v-if="selectedFileError.isOverNumbers">최대 3개의 파일까지 저장 가능합니다.</span>
-                    <div v-if="selectedFiles.length > 0">
-                        <h4>선택한 파일:</h4>
+
+                    <!-- 선택된 파일 목록 -->
+                    <div v-if="selectedFiles.length > 0" class="inputted-list">
+                        <label>Selected Files</label>
                         <ul>
-                            <li v-for="file in selectedFiles" :key="file.name">{{ file.name }}</li>
+                            <li v-for="file in selectedFiles" :key="file.name">
+                                {{ file.name }}
+                            </li>
                         </ul>
+                        <!-- 선택된 목록 초기화 -->
+                        <button class="input-reset-button" @click.prevent="clearSelectedFiles">Clear Files</button>
                     </div>
                 </div>
-
+                <!-- 제품 등록 버튼 -->
                 <input class="button" type="submit" value="Create Product"
                     :disabled="inputName.length === 0 || selectedBrand.length === 0 || selectedCategory.length === 0">
             </form>
@@ -390,9 +434,11 @@ onMounted(async () => {
                 <!-- 검색어 입력 필드 -->
                 <div class="input-group">
                     <label for="searchNamesInput">Enter Names</label>
-                    <input class="input" id="searchNamesInput" type="text" v-model="searchWords"
-                        placeholder="name, name, ..." @keydown.enter.prevent="selectOption('product_name')">
-                    <button @click.prevent="selectOption('product_name')">Enter Names</button>
+                    <div> <!-- flex 에서 벗어나기 위한 div -->
+                        <input class="input" id="searchNamesInput" type="text" v-model="searchWords"
+                            placeholder="name, name, ..." @keydown.enter.prevent="selectOption('product_name')">
+                        <button @click.prevent="selectOption('product_name')">Enter Names</button>
+                    </div>
                 </div>
                 <!-- 검색 브랜드 선택 -->
                 <div class="select-group">
@@ -414,38 +460,45 @@ onMounted(async () => {
                 </div>
                 <!-- 검색 성별 선택 -->
                 <div class="radio-group">
-                    <label>Choose Sexes(optional)</label>
+                    <label class="title">Choose Sexes(optional)</label>
+                    <div class="radio-inputs"> <!-- flex 에서 벗어나기 위한 div -->
+                        <input class="input" id="radio-male" type="radio" name="sex" value="Male(남)" v-model="selectedSex"
+                            @change.prevent="selectOption('sex')">
+                        <label for="radio-male">Male</label>
 
-                    <input class="input" id="radio-male" type="radio" name="sex" value="Male(남)" v-model="selectedSex"
-                        @change.prevent="selectOption('sex')">
-                    <label for="radio-male">Male(남)</label>
+                        <input class="input" id="radio-female" type="radio" name="sex" value="Female(여)"
+                            v-model="selectedSex" @change.prevent="selectOption('sex')">
+                        <label for="radio-female">Female</label>
 
-                    <input class="input" id="radio-female" type="radio" name="sex" value="Female(여)" v-model="selectedSex"
-                        @change.prevent="selectOption('sex')">
-                    <label for="radio-female">Female(여)</label>
+                        <input class="input" id="radio-unisex" type="radio" name="sex" value="Unisex(공용)"
+                            v-model="selectedSex" @change.prevent="selectOption('sex')">
+                        <label for="radio-unisex">Unisex</label>
+                    </div>
 
-                    <input class="input" id="radio-unisex" type="radio" name="sex" value="Unisex(공용)" v-model="selectedSex"
-                        @change.prevent="selectOption('sex')">
-                    <label for="radio-unisex">Unisex(공용)</label>
                 </div>
                 <!-- 검색 성인용/아동용 선택 -->
-                <div class="check-group">
-                    <label>Choose Usages(optional)</label>
+                <div class="radio-group">
+                    <label class="title">Choose Usages(optional)</label>
+                    <div class="radio-inputs"> <!-- flex 에서 벗어나기 위한 div -->
+                        <input class="input" id="check-kid" type="radio" name="kid" value="true" v-model="selectedKidType"
+                            @change.prevent="selectOption('isKid')">
+                        <label for="check-kid">For Kids(아동용)</label>
 
-                    <input class="input" id="check-kid" type="radio" name="kid" value="true" v-model="selectedKidType"
-                        @change.prevent="selectOption('isKid')">
-                    <label for="check-kid">For Kids(아동용)</label>
+                        <input class="input" id="check-adult" type="radio" name="adult" value="false"
+                            v-model="selectedKidType" @change.prevent="selectOption('isKid')">
+                        <label for="check-adult">For Adults(성인용)</label>
+                    </div>
 
-                    <input class="input" id="check-adult" type="radio" name="adult" value="false" v-model="selectedKidType"
-                        @change.prevent="selectOption('isKid')">
-                    <label for="check-adult">For Adults(성인용)</label>
                 </div>
                 <!-- 검색 판매량 입력 -->
                 <div class="input-group">
                     <label for="salesQtyInput">Enter Quantities(optional)</label>
-                    <input class="input" id="salesQtyInput" type="number" placeholder="Sales Quantity" min="0"
-                        v-model="inputQty" @keydown.enter.prevent="selectOption('sales_qty')">
-                    <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
+                    <div> <!-- flex 에서 벗어나기 위한 div -->
+                        <input class="input" id="salesQtyInput" type="number" placeholder="Sales Quantity" min="0"
+                            v-model="inputQty" @keydown.enter.prevent="selectOption('sales_qty')">
+                        <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
+                    </div>
+
                 </div>
                 <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
@@ -493,17 +546,20 @@ onMounted(async () => {
 
         <article class="list">
             <!-- 검색 버튼이 클릭됐을 때 정렬된 제품 목록 표시 -->
-            <div v-if="isSearched">
+            <div v-if="isSearched" class="list-group">
                 <h3>Searched Products</h3>
                 <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
-                <div class="sort-labels">
-                    <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
-                    <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
-                    <label @click="sortProducts('sex')" class="sort-label clickable">Sex</label>
-                    <label @click="sortProducts('is_kids')" class="sort-label clickable">Kid/Adult</label>
-                    <label @click="sortProducts('category_id')" class="sort-label clickable">Category</label>
-                    <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
-                        Quantity</label>
+                <div class="sort-option-group">
+                    <h4>Sort By</h4>
+                    <div class="sort-labels">
+                        <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
+                        <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
+                        <label @click="sortProducts('sex')" class="sort-label clickable">Sex</label>
+                        <label @click="sortProducts('is_kids')" class="sort-label clickable">Kid/Adult</label>
+                        <label @click="sortProducts('category_id')" class="sort-label clickable">Category</label>
+                        <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
+                            Quantity</label>
+                    </div>
                 </div>
             </div>
             <div v-else class="list-group">
@@ -513,33 +569,34 @@ onMounted(async () => {
                 <!-- 검색 버튼의 클릭 여부에 따라 정렬된목록 or 전체목록 보이기-->
                 <div v-for="product in (isSearched ? sortedProducts : products)" :key="product.product_id"
                     class="product-card">
+                    <div class="product-details">
+                        <h3>{{ product.product_name }}</h3>
+                        <div v-if="product.brand_id">
+                            Brand: {{ getBrandName(product.brand_id) }}
+                        </div>
+                        <div>Sex: {{ product.sex }}</div>
+                        <div>Kid/Adult: {{ product.is_kids ? 'For Kids' : 'For Adults' }}</div>
+                        <div v-if="product.category_id">
+                            Category: {{ getCategoryName(product.category_id) }}
+                        </div>
+                        <div>Sales Quantity: {{ product.sales_quantity }}</div>
+                    </div>
+                    <!-- 제품 사진 -->
                     <template v-if="product.file_paths && product.file_paths.length > 0">
                         <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
                             <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
                         </div>
                     </template>
-                    <div class="product-details">
-                        <h3>{{ product.product_name }}</h3>
-                        <p v-if="product.brand_id">
-                            Brand: {{ getBrandName(product.brand_id) }}
-                        </p>
-                        <p>Sex: {{ product.sex }}</p>
-                        <p>Kid/Adult: {{ product.is_kids ? 'For Kids' : 'For Adults' }}</p>
-                        <p v-if="product.category_id">
-                            Category: {{ getCategoryName(product.category_id) }}
-                        </p>
-                        <p>Sales Quantity: {{ product.sales_quantity }}</p>
-                    </div>
                 </div>
             </div>
         </article>
     </section>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .wrapper {
     color: #fff;
-    background-color: #333;
+    /* background-color: #333; */
 }
 
 .product-wrapper {
@@ -619,4 +676,4 @@ onMounted(async () => {
 .sort-label:hover {
     color: red;
 }
-</style>
+</style> -->

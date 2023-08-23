@@ -308,7 +308,7 @@ onMounted(async () => {
                 </div>
                 <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
-                    <label>Selected Categories:</label>
+                    <label>Selected Categories</label>
                     <ul>
                         <li v-for="id in selectedCategories" :key="id">
                             {{ getCategoryNameById(id) }}
@@ -335,7 +335,7 @@ onMounted(async () => {
                         </option>
                     </select>
                 </div>
-                <div class="from-to">TO</div>
+                <label class="from-to">TO</label>
                 <!-- 바꿀 이름 입력 -->
                 <input class="input" type="text" v-model="newBrandName" placeholder="New Brand name">
                 <input class="button" type="submit" value="Update Brand">
