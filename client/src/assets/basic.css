@@ -393,8 +393,33 @@ ProductView 스타일
 .list-group {
     display: flex;
     flex-direction: column;
+
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 10px 0;
+    background-color: #f9f9f9;
 }
 
+.list-group h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.list-group ul {
+    list-style: none;
+    padding: 0;
+}
+
+.list-group li {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.list-group li:last-child {
+    margin-bottom: 0;
+}
+
+/* 검색 결과 정렬 */
 .sort-option-group {
     margin-top: 1%;
     margin-bottom: 5%;

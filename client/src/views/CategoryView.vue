@@ -420,26 +420,26 @@ onMounted(async () => {
 
         <article class="list">
             <!-- 검색어가 입력되었을 때, 정렬된 제품 목록 표시 -->
-            <div v-if="isProduct">
+            <div v-if="isProduct" class="list-group">
                 <h3>Products</h3>
                 <!-- 오름차순/내림차순 정렬 할 product 칼럼 선택 -->
-                <div class="sort-labels">
-                    <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
-                    <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
-                    <label @click="sortProducts('sex')" class="sort-label clickable">Sex</label>
-                    <label @click="sortProducts('is_kids')" class="sort-label clickable">Kid/Adult</label>
-                    <label @click="sortProducts('category_id')" class="sort-label clickable">Category</label>
-                    <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
-                        Quantity</label>
+                <div class="sort-option-group">
+                    <h4>Sort By</h4>
+                    <div class="sort-labels">
+                        <label @click="sortProducts('product_name')" class="sort-label clickable">Product Name</label>
+                        <label @click="sortProducts('brand_id')" class="sort-label clickable">Brand</label>
+                        <label @click="sortProducts('sex')" class="sort-label clickable">Sex</label>
+                        <label @click="sortProducts('is_kids')" class="sort-label clickable">Kid/Adult</label>
+                        <label @click="sortProducts('category_id')" class="sort-label clickable">Category</label>
+                        <label @click="sortProducts('sales_quantity')" class="sort-label clickable">Sales
+                            Quantity</label>
+                    </div>
                 </div>
+
                 <!-- 정렬된 product 목록 보이기 -->
                 <div class="product-cards">
                     <div v-for="product in sortedProducts" :key="product.product_id" class="product-card">
-                        <template v-if="product.file_paths && product.file_paths.length > 0">
-                            <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
-                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
-                            </div>
-                        </template>
+
                         <div class="product-details">
                             <h3>{{ product.product_name }}</h3>
                             <p v-if="product.brand_id">
@@ -452,6 +452,12 @@ onMounted(async () => {
                             </p>
                             <p>Sales Quantity: {{ product.sales_quantity }}</p>
                         </div>
+                        <!-- 제품 사진 -->
+                        <template v-if="product.file_paths && product.file_paths.length > 0">
+                            <div v-for="filePath in product.file_paths" :key="filePath" class="image-container">
+                                <img :src="getImage(filePath)" alt="Product Image" class="product-image" />
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>

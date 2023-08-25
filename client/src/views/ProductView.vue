@@ -406,8 +406,8 @@ onMounted(async () => {
                     <label class="title">Images(Optional)</label>
 
                     <input class="file" type="file" name="imgs" accept="image/*" @change="accumulateList" max="3" multiple>
-                    <span v-if="selectedFileError.isOverSized">선택한 파일 중 1MB를 초과하는 파일이 있습니다.</span>
-                    <span v-if="selectedFileError.isOverNumbers">최대 3개의 파일까지 저장 가능합니다.</span>
+                    <span v-if="selectedFileError.isOverSized">There are files selected that exceed 300KB</span>
+                    <span v-if="selectedFileError.isOverNumbers">Up to 3 files can be saved</span>
 
                     <!-- 선택된 파일 목록 -->
                     <div v-if="selectedFiles.length > 0" class="inputted-list">
@@ -565,7 +565,8 @@ onMounted(async () => {
             <div v-else class="list-group">
                 <h3>All Products</h3>
             </div>
-            <div class="product-cards">
+            <!-- product 목록 보이기 -->
+            <div class="product-cards list-group">
                 <!-- 검색 버튼의 클릭 여부에 따라 정렬된목록 or 전체목록 보이기-->
                 <div v-for="product in (isSearched ? sortedProducts : products)" :key="product.product_id"
                     class="product-card">
@@ -592,88 +593,3 @@ onMounted(async () => {
         </article>
     </section>
 </template>
-
-<!-- <style scoped>
-.wrapper {
-    color: #fff;
-    /* background-color: #333; */
-}
-
-.product-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
-}
-
-.product-wrapper form {
-    margin-bottom: 20px;
-}
-
-.product-wrapper label {
-    margin-bottom: 10px;
-}
-
-.product-wrapper .input-container {
-    margin-bottom: 10px;
-}
-
-.product-wrapper .menu {
-    display: flex;
-    align-items: center;
-}
-
-.product-wrapper .product-cards {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.product-wrapper .product-card {
-    width: 300px;
-    margin: 10px;
-    padding: 20px;
-    background-color: #f2f2f2;
-    text-align: center;
-}
-
-.product-wrapper .product-details {
-    margin-top: 20px;
-    text-align: left;
-}
-
-.product-wrapper .product-image {
-    width: 100%;
-    height: auto;
-    margin-bottom: 10px;
-}
-
-.product-wrapper .list {
-    margin-top: 20px;
-}
-
-.product-wrapper .list ul {
-    list-style: none;
-    padding: 0;
-}
-
-.product-wrapper .list li {
-    margin-bottom: 5px;
-}
-
-/* 정렬 */
-.sort-labels {
-    display: flex;
-    gap: 10px;
-}
-
-.clickable {
-    cursor: pointer;
-}
-
-.sort-label:hover {
-    color: red;
-}
-</style> -->
