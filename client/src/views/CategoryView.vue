@@ -104,6 +104,8 @@ function onCheckboxChange(checkbox: string) {
 }
 
 async function searchCategories() {
+    // 기존에 있던 에러 메세지 없애기
+    errMsgSearch.value = '';
 
     // 맨 마지막 콤마 제거 -> 콤마 나오면 분리
     const values = searchNames.value.replace(/,\s*$/, '').split(",")
