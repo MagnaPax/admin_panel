@@ -99,10 +99,6 @@ async function updateCategory() {
 
 
 
-function onCheckboxChange(checkbox: string) {
-    checkedItems.value = [checkbox];
-}
-
 async function searchCategories() {
     // 기존에 있던 에러 메세지 없애기
     errMsgSearch.value = '';
@@ -399,12 +395,10 @@ onMounted(async () => {
                 </div>
 
                 <div class="check-group">
-                    <input id="ch_brand" type="checkbox" v-model="checkedItems" value="brand"
-                        @change.prevent="onCheckboxChange('brand')" />
+                    <input id="ch_brand" type="checkbox" v-model="checkedItems" value="brand" />
                     <label for="ch_brand">For the brands(입력한 카테고리와 관련된 브랜드 목록)</label>
 
-                    <input id="ch_product" type="checkbox" v-model="checkedItems" value="product"
-                        @change.prevent="onCheckboxChange('product')" />
+                    <input id="ch_product" type="checkbox" v-model="checkedItems" value="product" />
                     <label for="ch_product">For the products(입력한 카테고리와 관련된 제품 목록)</label>
                 </div>
 
