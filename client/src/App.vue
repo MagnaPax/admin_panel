@@ -8,11 +8,11 @@ import SideBar from '@/components/Sidebar-Item.vue'
 
 <template>
   <SideBar />
-  <all-contents>
+  <div class="all-contents">
     <Header />
     <main>
       <RouterView />
     </main>
     <Footer />
-  </all-contents>
+  </div>
 </template>

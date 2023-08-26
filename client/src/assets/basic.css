@@ -18,7 +18,7 @@ body {
 }
 
 /* 사이드바 이외의 컴포넌트들(헤더,메인,푸터) 묶음 */
-all-contents {
+.all-contents {
     display: flex;
     flex-direction: column;
     width: 100%;
