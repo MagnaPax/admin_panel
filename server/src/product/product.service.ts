@@ -15,6 +15,7 @@ import { BrandService } from 'src/brand/brand.service';
 import { CategoryService } from 'src/category/category.service';
 
 import { NotFoundIDException } from 'src/exceptions/custom-exception';
+import { ProductNotFoundException } from 'src/exceptions/custom-exception';
 
 @Injectable()
 export class ProductService {
@@ -158,6 +159,11 @@ export class ProductService {
       columns,
       this.productRepository,
     );
+
+    // 검색 결과가 빈 배열일 때 에러 반환
+    if (!products.length) throw new ProductNotFoundException();
+
+    //
 
     return products;
   }

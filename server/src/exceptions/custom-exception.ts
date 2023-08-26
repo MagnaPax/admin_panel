@@ -42,12 +42,12 @@ export class CategoryDuplicatedException extends BaseException {
   }
 }
 
-export class NotFoundIDException extends BaseException {
+export class ProductNotFoundException extends BaseException {
   constructor() {
     super(
-      ExceptionCode.NotFoundID,
+      ExceptionCode.ProductNotFound,
       HttpStatus.NOT_FOUND,
-      'Not found ID(ID를 찾을 수 없습니다)',
+      'Not found the product(Product를 찾을 수 없습니다)',
     );
   }
 }
@@ -58,6 +58,16 @@ export class NoQueryDeliveredException extends BaseException {
       ExceptionCode.NoQueryDelivered,
       HttpStatus.BAD_REQUEST,
       'No query delivered(검색어를 입력해 주세요)',
+    );
+  }
+}
+
+export class NotFoundIDException extends BaseException {
+  constructor() {
+    super(
+      ExceptionCode.NotFoundID,
+      HttpStatus.NOT_FOUND,
+      'Not found ID(ID를 찾을 수 없습니다)',
     );
   }
 }

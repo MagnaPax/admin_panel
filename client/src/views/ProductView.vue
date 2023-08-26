@@ -39,10 +39,13 @@ const sortOrder = ref('asc');
 const sortColumn = ref('');
 const isSearched = ref<boolean>(false)
 
+const errMsgSearch = ref<string>()
 
 
 
-async function addProduct() {
+
+
+async function createProduct() {
     const path = 'product'
 
     const newProduct = {
@@ -142,8 +145,15 @@ function clearSearchInputs() {
 }
 
 async function searchProducts() {
+    // 기존에 있던 에러 메세지 없애기
+    errMsgSearch.value = '';
+
     await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
-    clearSearchInputs() // 검색어 초기화
+
+    // 검색어 초기화
+    clearSearchInputs()
+
+    // 검색 버튼 눌린것 표시
     isSearched.value = true
 }
 
@@ -195,9 +205,14 @@ async function getProducts(path: string = 'product', productNames?: string[], se
         fullURL = path;
     }
 
+    try {
+        const response = await request.get(fullURL)
+        await request.saveResult(path, response) // store에 저장
+        errMsgSearch.value = ''; // 에러가 없을 경우 에러메세지를 빈 문자열로 초기화
+    } catch (error) {
+        errMsgSearch.value = String(error); // error를 문자열로 변환하여 할당
+    }
 
-    const response = await request.get(fullURL)
-    await request.saveResult(path, response) // store에 저장
 }
 
 async function getCategories(path: string = 'category', categoryNames?: string[], brand?: boolean, product?: boolean) {
@@ -340,7 +355,7 @@ onMounted(async () => {
     <section class="wrapper">
         <article class="create">
             <h3>Add a new Product</h3>
-            <form class="container" @submit.prevent="addProduct" method="post" enctype="multipart/form-data">
+            <form class="container" @submit.prevent="createProduct" method="post" enctype="multipart/form-data">
                 <!-- 제품 이름 -->
                 <div class="input-group">
                     <label for="newNameInput">Product Name</label>
@@ -535,6 +550,8 @@ onMounted(async () => {
                 <!-- 검색 버튼 -->
                 <input class="button" type="submit" value="Search">
             </form>
+            <!-- 에러메시지 -->
+            <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
         </article>
 
 
