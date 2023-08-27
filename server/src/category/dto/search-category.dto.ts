@@ -2,7 +2,6 @@ import {
   IsBoolean,
   IsString,
   IsOptional,
-  ArrayUnique,
   ArrayNotEmpty,
   IsNotEmpty,
 } from 'class-validator';
@@ -12,7 +11,6 @@ import { NoQueryDeliveredException } from 'src/exceptions/custom-exception';
 export class SearchCategoryDto {
   @IsString({ each: true })
   @ArrayNotEmpty()
-  @ArrayUnique()
   @IsNotEmpty({ each: true }) // 각 요소에 대해 검증
   @Transform(({ value }) => {
     if (value.includes('undefined') || value.includes('null')) {
