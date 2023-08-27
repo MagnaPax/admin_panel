@@ -297,6 +297,7 @@ function sortProducts(column: string) {
 function showAllCategories() {
     isProduct.value = false
     isBrand.value = false
+    getCategories() // categories 갱신
 }
 
 onMounted(async () => {
