@@ -301,8 +301,8 @@ function showAllCategories() {
 }
 
 onMounted(async () => {
-    await getBrands()
     await getCategories()
+    await getBrands()
 })
 
 </script>

@@ -342,12 +342,9 @@ function getImage(fileName: string) {
 }
 
 onMounted(async () => {
-    if (!brands.value.length && !categories.value.length && !products.value.length) {
-        await getBrands()
-        await getCategories()
-        await getProducts()
-    }
-
+    await getProducts()
+    await getBrands()
+    await getCategories()
 })
 </script>
 
