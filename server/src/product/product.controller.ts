@@ -16,7 +16,6 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RemoveProductDto } from './dto/remove-product.dto';
 import { SearchProductDto } from './dto/search-product.dto';
-import { MakeProductDto } from './dto/make-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/config/multer.options';
 
@@ -26,16 +25,11 @@ export class ProductController {
 
   @Post('uploads')
   @UseInterceptors(FilesInterceptor('imgs', 3, multerOptions))
-  async createDatas(
+  async create(
     @UploadedFiles() imgs: Express.Multer.File[],
-    @Body() data: MakeProductDto,
+    @Body() data: CreateProductDto,
   ) {
-    return this.productService.createProduct(imgs, data.data);
-  }
-
-  @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+    return this.productService.create(imgs, data);
   }
 
   @Get()

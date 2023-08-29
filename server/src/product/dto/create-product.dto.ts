@@ -1,47 +1,47 @@
 import {
-  IsDefined,
   IsNumber,
   IsString,
   IsBoolean,
-  IsPositive,
   IsNotEmpty,
   IsOptional,
-  IsJSON,
+  Min,
+  IsObject,
 } from 'class-validator';
+
+import { Type } from 'class-transformer';
 
 export class CreateProductDto {
   @IsNotEmpty()
-  @IsDefined()
   @IsString()
   product_name: string;
 
-  @IsNotEmpty()
-  @IsDefined()
+  @Type(() => Number) // 클라이언트에서 FormData()로 넘어왔기 때문에 모든 데이터가 string 형식
+  @IsOptional()
   @IsNumber()
-  brand_id: number;
+  brand_id?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber()
+  category_id?: number;
 
   @IsNotEmpty()
-  @IsDefined()
-  @IsNumber()
-  category_id: number;
-
-  @IsNotEmpty()
-  @IsDefined()
   @IsString()
   sex: string;
 
+  @Type(() => Boolean)
   @IsNotEmpty()
-  @IsDefined()
   @IsBoolean()
   is_kids: boolean;
 
+  @Type(() => Number)
   @IsNotEmpty()
-  @IsDefined()
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   sales_quantity: number;
 
+  @Type(() => File)
   @IsOptional()
-  @IsJSON()
-  file_paths?: string[];
+  @IsObject()
+  imgs?: File[];
 }

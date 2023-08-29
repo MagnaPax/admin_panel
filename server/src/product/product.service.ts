@@ -102,32 +102,20 @@ export class ProductService {
     return;
   }
 
-  async createProduct(
+  async create(
     imgs: Express.Multer.File[],
     data: CreateProductDto,
   ): Promise<Product> {
     // 중간 테이블 업데이트
     await this.updateIntermediate(data.brand_id, data.category_id);
 
-    // 파일 처리
+    // 저장된 파일 경로 추가
     const filePaths: string[] = [];
     imgs.forEach((img) => filePaths.push(img.path));
-
-    // 파일 경로 추가
     data['file_paths'] = filePaths;
 
     // Product 엔티티를 DB에 저장
     return await this.productRepository.save(data);
-  }
-
-  async create(createProductDto: CreateProductDto) {
-    // 중간 테이블 업데이트
-    await this.updateIntermediate(
-      createProductDto.brand_id,
-      createProductDto.category_id,
-    );
-
-    return await this.productRepository.save(createProductDto);
   }
 
   async findAll() {

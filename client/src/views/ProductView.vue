@@ -13,14 +13,14 @@ const brands = computed(() => counterStore.brandList)
 const categories = computed(() => counterStore.categoryList)
 const products = computed(() => counterStore.productList)
 
-const inputName = ref('')
-const selectedSexForCreate = ref('')
+const inputName = ref<string>()
+const selectedSexForCreate = ref<string>()
 const selectedSex = ref('')
 const inputQty = ref<number>()
 const selectedKidTypeForCreate = ref<boolean>()
 const selectedKidType = ref<boolean>()
-const selectedBrand = ref('')
-const selectedCategory = ref('')
+const selectedBrand = ref<number>()
+const selectedCategory = ref<number>()
 const selectedFiles = ref<File[]>([])
 const selectedFileError = ref({ isOverSized: false, isOverNumbers: false })
 
@@ -44,33 +44,35 @@ const errMsgSearch = ref<string>()
 
 
 
-
 async function createProduct() {
-    const path = 'product'
+    const path = 'product/uploads/'
+    const formData = new FormData();
 
-    const newProduct = {
-        product_name: inputName.value,
-        brand_id: selectedBrand.value,
-        category_id: selectedCategory.value,
-        sex: selectedSexForCreate.value,
-        is_kids: selectedKidTypeForCreate.value,
-        sales_quantity: inputQty.value,
-        file_paths: JSON.stringify(selectedFiles.value) // 배열을 JSON 문자열로 변환
-    }
+    // undefined 가 아닐때만 값 전달
+    formData.append('product_name', inputName.value || '');
+    formData.append('brand_id', selectedBrand.value?.toString() || '');
+    formData.append('category_id', selectedCategory.value?.toString() || '');
+    formData.append('sex', selectedSexForCreate.value || '');
+    formData.append('is_kids', selectedKidTypeForCreate.value?.toString() || '');
+    formData.append('sales_quantity', inputQty.value?.toString() || '');
+    // 각각의 파일을 formData에 추가
+    selectedFiles.value.forEach(file => formData.append('imgs', file))
+
 
     try {
         // 서버로 제품 추가 요청 보내기
-        await request.post(path, newProduct)
+        await request.post(path, formData);
 
         // 성공적으로 추가되면, 선택된 파일들 초기화
-        selectedFiles.value = []
+        selectedFiles.value = [];
 
         // products 갱신
-        getProducts()
+        getProducts();
     } catch (error) {
-        console.error('제품 추가 중 에러 발생', error)
+        console.error('제품 추가 중 에러 발생', error);
     }
 }
+
 
 function clearSelectedFiles() {
     selectedFiles.value = []
@@ -312,13 +314,20 @@ function sortProducts(column: string) {
 
 
 function accumulateList(e: any) {
+    // 이전의 에러 메세지 삭제하기
     selectedFileError.value.isOverNumbers = false
     selectedFileError.value.isOverSized = false
 
-    const files = e.target.files ? e.target.files : null
-    const mergedFiles = [...selectedFiles.value, ...files]
+    const files = e.target.files;
+    // 입력된 파일이 null 인 경우
+    if (!files) {
+        selectedFiles.value = [];
+        return;
+    }
 
-    if (mergedFiles.length > 3) {
+    const filesAccumulated = [...selectedFiles.value, ...files]
+
+    if (filesAccumulated.length > 3) {
         console.error('파일 갯수가 3개보다 많다');
         selectedFileError.value.isOverNumbers = true;
         return;
@@ -333,7 +342,7 @@ function accumulateList(e: any) {
         }
     }
 
-    selectedFiles.value = mergedFiles
+    selectedFiles.value = filesAccumulated
 }
 
 function getImage(fileName: string) {
@@ -416,8 +425,8 @@ onMounted(async () => {
                 <!-- 파일 업로드 -->
                 <div class="img-upload-group">
                     <label class="title">Images(Optional)</label>
-
                     <input class="file" type="file" name="imgs" accept="image/*" @change="accumulateList" max="3" multiple>
+
                     <span v-if="selectedFileError.isOverSized">There are files selected that exceed 300KB</span>
                     <span v-if="selectedFileError.isOverNumbers">Up to 3 files can be saved</span>
 
@@ -435,7 +444,7 @@ onMounted(async () => {
                 </div>
                 <!-- 제품 등록 버튼 -->
                 <input class="button" type="submit" value="Create Product"
-                    :disabled="inputName.length === 0 || selectedBrand.length === 0 || selectedCategory.length === 0">
+                    :disabled="inputName?.length === 0 || selectedSexForCreate?.length === 0 || !selectedKidTypeForCreate || !inputQty">
             </form>
         </article>
 
