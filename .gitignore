@@ -183,41 +183,41 @@ yarn-error.log
 # NodeJS
 
 # compiled output
-/backend_notag/dist
-/backend_notag/node_modules
+/server/dist
+/server/node_modules
 
 # Logs
-/backend_notag/logs
-/backend_notag/*.log
-/backend_notag/npm-debug.log*
-/backend_notag/pnpm-debug.log*
-/backend_notag/yarn-debug.log*
-/backend_notag/yarn-error.log*
-/backend_notag/lerna-debug.log*
+/server/logs
+/server/*.log
+/server/npm-debug.log*
+/server/pnpm-debug.log*
+/server/yarn-debug.log*
+/server/yarn-error.log*
+/server/lerna-debug.log*
 
 # OS
-/backend_notag/.DS_Store
+/server/.DS_Store
 
 # Tests
-/backend_notag/coverage
-/backend_notag/.nyc_output
+/server/coverage
+/server/.nyc_output
 
 # IDEs and editors
-/backend_notag/.idea
-/backend_notag/.project
-/backend_notag/.classpath
-/backend_notag/.c9/
-/backend_notag/*.launch
-/backend_notag/.settings/
-/backend_notag/*.sublime-workspace
+/server/.idea
+/server/.project
+/server/.classpath
+/server/.c9/
+/server/*.launch
+/server/.settings/
+/server/*.sublime-workspace
 
 # IDE - VSCode
-/backend_notag/.vscode/
-/backend_notag/.vscode/settings.json
-/backend_notag/.vscode/tasks.json
-/backend_notag/.vscode/launch.json
-/backend_notag/.vscode/extensions.json
-/backend_notag/.vscode/*.code-snippets
+/server/.vscode/
+/server/.vscode/settings.json
+/server/.vscode/tasks.json
+/server/.vscode/launch.json
+/server/.vscode/extensions.json
+/server/.vscode/*.code-snippets
 
 /backend_no-tag/storage
 
@@ -304,7 +304,5 @@ yarn-error.log
 #################################################################################
 #################################################################################
 
-문제.md
-old_README.md
-
-/storage/
+# 물리적 파일 저장소
+/server/storage/
