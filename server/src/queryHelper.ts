@@ -17,8 +17,17 @@ export class Query {
       if (values[index] === null) {
         conditions.push(`${tableName}.${columnName} IS NULL`);
       } else {
-        conditions.push(`${tableName}.${columnName} = :value${index}`);
-        queryBuilder.setParameter(`value${index}`, values[index]);
+        // 단어를 하나 이상 포함하는지 검사하는 조건을 추가
+        const keywords = values[index].split(/\s+/).filter(Boolean);
+        if (keywords.length > 0) {
+          const keywordConditions = keywords.map(
+            (keyword) => `${tableName}.${columnName} LIKE :keyword${index}`,
+          );
+          conditions.push(`(${keywordConditions.join(' OR ')})`);
+          keywords.forEach((keyword) => {
+            queryBuilder.setParameter(`keyword${index}`, `%${keyword}%`);
+          });
+        }
       }
     });
 
