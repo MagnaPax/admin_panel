@@ -26,14 +26,14 @@ const selectedFileError = ref({ isOverSized: false, isOverNumbers: false })
 
 const selectedBrands = ref(0)
 const selectedCategories = ref(0)
-const searchWords = ref('')
+const inputWords = ref('')
 
-let searchProductNames = ref<string[]>([])
-let searchBrandIDs: number[] = []
-let searchCategoryIDs: number[] = []
-let searchSexes: string[] = []
-let searchKids: { id: number, value: boolean }[] = []
-let searchQtys: number[] = []
+const searchProductNames = ref<string[]>([])
+const searchBrandIDs = ref<number[]>([])
+const searchCategoryIDs = ref<number[]>([])
+const searchSexes = ref<string[]>([])
+const searchKids = ref<{ id: number; value: boolean }[]>([]);
+const searchQtys = ref<number[]>([])
 
 const sortOrder = ref('asc');
 const sortColumn = ref('');
@@ -43,8 +43,12 @@ const errMsgSearch = ref<string>()
 
 
 
+function deleteErrMsg() {
+    errMsgSearch.value = '';
+}
 
 async function createProduct() {
+
     const path = 'product/uploads/'
     const formData = new FormData();
 
@@ -79,37 +83,52 @@ function clearSelectedFiles() {
 }
 
 
+// 한글(IME) 입력 처리
+function inputHangul(e: Event) {
+    inputWords.value = (e.target as HTMLInputElement).value
+}
 
 function selectOption(column: string) {
+    deleteErrMsg()
     let values: string[] = []
+
     switch (column) {
         case 'product_name':
-            values = searchWords.value.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
-            searchProductNames.value.push(...values)
-            searchWords.value = ''
+            // 공백 입력 방지
+            // inputWords 가 정의되어 있는 경우에만 (옵셔널 체이닝)
+            if (inputWords.value?.length === 0) return
+
+            values = inputWords.value?.replace(/,\s*$/, '').split(",").map((value: string) => value.trim())
+            searchProductNames.value.push(...values) // 배열 복사
+            inputWords.value = ''
             break;
         case 'brand':
-            searchBrandIDs.push(selectedBrands.value)
+            // searchBrandIDs.push(selectedBrands.value)
+            searchBrandIDs.value.push(selectedBrands.value)
             selectedBrands.value = 0
             break;
         case 'category':
-            searchCategoryIDs.push(selectedCategories.value)
+            // searchCategoryIDs.push(selectedCategories.value)
+            searchCategoryIDs.value.push(selectedCategories.value)
             selectedCategories.value = 0
             break;
         case 'sex':
-            searchSexes.push(selectedSex.value)
+            // searchSexes.push(selectedSex.value)
+            searchSexes.value.push(selectedSex.value)
             selectedSex.value = ''
             break;
         case 'isKid':
             selectedKidType.value !== undefined
-                ? searchKids.push({ id: searchKids.length + 1, value: selectedKidType.value })
+                // ? searchKids.push({ id: searchKids.length + 1, value: selectedKidType.value })
+                ? searchKids.value.push({ id: searchKids.value.length + 1, value: selectedKidType.value })
                 : null;
 
             selectedKidType.value = undefined
             break;
         case 'sales_qty':
             typeof inputQty.value === 'number'
-                ? searchQtys.push(inputQty.value)
+                // ? searchQtys.push(inputQty.value)
+                ? searchQtys.value.push(inputQty.value)
                 : undefined
 
             inputQty.value = undefined
@@ -139,18 +158,24 @@ function getUsageByValue(isKid: boolean | string): string {
 
 function clearSearchInputs() {
     searchProductNames.value = []
-    searchSexes = []
-    searchBrandIDs = []
-    searchCategoryIDs = []
-    searchKids = []
-    searchQtys = []
+    searchSexes.value = []
+    searchBrandIDs.value = []
+    searchCategoryIDs.value = []
+    searchKids.value = []
+    searchQtys.value = []
+
+    inputWords.value = String()
+    selectedBrands.value = Number()
+    selectedCategories.value = Number()
+    selectedSex.value = String()
+    selectedKidType.value = undefined
+    inputQty.value = undefined
 }
 
 async function searchProducts() {
-    // 기존에 있던 에러 메세지 없애기
-    errMsgSearch.value = '';
+    deleteErrMsg()
 
-    await getProducts('product', searchProductNames.value, searchSexes, searchBrandIDs, searchCategoryIDs, searchKids, searchQtys)
+    await getProducts('product', searchProductNames.value, searchSexes.value, searchBrandIDs.value, searchCategoryIDs.value, searchKids.value, searchQtys.value)
 
     // 검색어 초기화
     clearSearchInputs()
@@ -451,15 +476,15 @@ onMounted(async () => {
 
         <article class="search">
             <h3>Look Up Product Names</h3>
-            <form @submit.prevent="searchProducts" class="container">
+            <div class="container">
                 <!-- 검색어 입력 필드 -->
                 <div class="input-group">
                     <label for="searchNamesInput">Enter Names</label>
-                    <div> <!-- flex 에서 벗어나기 위한 div -->
-                        <input class="input" id="searchNamesInput" type="text" v-model="searchWords"
-                            placeholder="name, name, ..." @keydown.enter.prevent="selectOption('product_name')">
-                        <button @click.prevent="selectOption('product_name')">Enter Names</button>
-                    </div>
+
+                    <!-- IME(한글)을 입력하기 위해 v-bind와 event 리스너 사용 -->
+                    <input class="input" id="searchNamesInput" type="text" placeholder="name, name, ..." :value="inputWords"
+                        @input="inputHangul" @keyup.enter.prevent="selectOption('product_name')"
+                        @blur="selectOption('product_name')">
                 </div>
                 <!-- 검색 브랜드 선택 -->
                 <div class="select-group">
@@ -517,7 +542,7 @@ onMounted(async () => {
                     <div> <!-- flex 에서 벗어나기 위한 div -->
                         <input class="input" id="salesQtyInput" type="number" placeholder="Sales Quantity" min="0"
                             v-model="inputQty" @keydown.enter.prevent="selectOption('sales_qty')">
-                        <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button>
+                        <!-- <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button> -->
                     </div>
 
                 </div>
@@ -554,8 +579,8 @@ onMounted(async () => {
                     <button class="input-reset-button" @click.prevent="clearSearchInputs">Clear Options & Inputs</button>
                 </div>
                 <!-- 검색 버튼 -->
-                <input class="button" type="submit" value="Search">
-            </form>
+                <button class="button" type="submit" value="Search" @click.prevent="searchProducts">Search</button>
+            </div>
             <!-- 에러메시지 -->
             <div v-if="errMsgSearch" class="error-message">{{ errMsgSearch }}</div>
         </article>

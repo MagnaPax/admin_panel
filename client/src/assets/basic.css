@@ -162,13 +162,13 @@ article h3 {
     margin-bottom: 1%;
 }
 
-form.container {
+.container {
     display: flex;
     flex-direction: column;
     gap: 1em;
 }
 
-form.container label {
+.container label {
     font-weight: bold;
 }
 
