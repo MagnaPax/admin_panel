@@ -508,16 +508,16 @@ onMounted(async () => {
                 <div class="radio-group">
                     <label class="title">Choose Sexes(optional)</label>
                     <div class="radio-inputs"> <!-- flex 에서 벗어나기 위한 div -->
-                        <input class="input" id="radio-male" type="radio" name="sex" value="Male(남)" v-model="selectedSex"
+                        <input class="input" id="radio-male" type="radio" name="sex" value="남" v-model="selectedSex"
                             @change.prevent="selectOption('sex')">
                         <label for="radio-male">Male</label>
 
-                        <input class="input" id="radio-female" type="radio" name="sex" value="Female(여)"
-                            v-model="selectedSex" @change.prevent="selectOption('sex')">
+                        <input class="input" id="radio-female" type="radio" name="sex" value="여" v-model="selectedSex"
+                            @change.prevent="selectOption('sex')">
                         <label for="radio-female">Female</label>
 
-                        <input class="input" id="radio-unisex" type="radio" name="sex" value="Unisex(공용)"
-                            v-model="selectedSex" @change.prevent="selectOption('sex')">
+                        <input class="input" id="radio-unisex" type="radio" name="sex" value="공용" v-model="selectedSex"
+                            @change.prevent="selectOption('sex')">
                         <label for="radio-unisex">Unisex</label>
                     </div>
 
