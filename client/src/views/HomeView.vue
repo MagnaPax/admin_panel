@@ -2,8 +2,8 @@
 </script>
 
 <template>
-  <section class="information">
-    <article>
+  <section class="wrapper">
+    <article class="information">
       <div>한천희 HAN, Chunhee</div>
       <div>chunhee.han@outlook.com</div>
     </article>
