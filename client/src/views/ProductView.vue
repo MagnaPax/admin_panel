@@ -103,23 +103,19 @@ function selectOption(column: string) {
             inputWords.value = ''
             break;
         case 'brand':
-            // searchBrandIDs.push(selectedBrands.value)
             searchBrandIDs.value.push(selectedBrands.value)
             selectedBrands.value = 0
             break;
         case 'category':
-            // searchCategoryIDs.push(selectedCategories.value)
             searchCategoryIDs.value.push(selectedCategories.value)
             selectedCategories.value = 0
             break;
         case 'sex':
-            // searchSexes.push(selectedSex.value)
             searchSexes.value.push(selectedSex.value)
             selectedSex.value = ''
             break;
         case 'isKid':
             selectedKidType.value !== undefined
-                // ? searchKids.push({ id: searchKids.length + 1, value: selectedKidType.value })
                 ? searchKids.value.push({ id: searchKids.value.length + 1, value: selectedKidType.value })
                 : null;
 
@@ -127,7 +123,6 @@ function selectOption(column: string) {
             break;
         case 'sales_qty':
             typeof inputQty.value === 'number'
-                // ? searchQtys.push(inputQty.value)
                 ? searchQtys.value.push(inputQty.value)
                 : undefined
 
@@ -479,7 +474,7 @@ onMounted(async () => {
             <div class="container">
                 <!-- 검색어 입력 필드 -->
                 <div class="input-group">
-                    <label for="searchNamesInput">Enter Names</label>
+                    <label for="searchNamesInput">Enter Names(optional)</label>
 
                     <!-- IME(한글)을 입력하기 위해 v-bind와 event 리스너 사용 -->
                     <input class="input" id="searchNamesInput" type="text" placeholder="name, name, ..." :value="inputWords"
@@ -539,12 +534,9 @@ onMounted(async () => {
                 <!-- 검색 판매량 입력 -->
                 <div class="input-group">
                     <label for="salesQtyInput">Enter Quantities(optional)</label>
-                    <div> <!-- flex 에서 벗어나기 위한 div -->
-                        <input class="input" id="salesQtyInput" type="number" placeholder="Sales Quantity" min="0"
-                            v-model="inputQty" @keydown.enter.prevent="selectOption('sales_qty')">
-                        <!-- <button @click.prevent="selectOption('sales_qty')">Enter Quantity</button> -->
-                    </div>
-
+                    <input class="input" id="salesQtyInput" type="number" placeholder="Sales Quantity" min="0"
+                        v-model="inputQty" @keydown.enter.prevent="selectOption('sales_qty')"
+                        @blur="selectOption('sales_qty')">
                 </div>
                 <!-- 선택된 카테고리 목록 -->
                 <div class="inputted-list">
