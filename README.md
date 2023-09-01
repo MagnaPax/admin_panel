@@ -1,6 +1,7 @@
-### mysql 도커에 설치
+### 도커에 mysql 설치
 
-./docker-compose.yml
+- ###### Docker compose 로 컨테이너 정의
+  ./docker-compose.yml
 
 ```
 version: '3'
@@ -15,13 +16,22 @@ services:
       MYSQL_ROOT_PASSWORD: root
       TZ: Asia/Seoul
     volumes:
+    # 호스트경로:컨테이너내부경로
       - ./db/mysql/data:/var/lib/mysql
       - ./db/mysql/init:/docker-entrypoint-initdb.d
     platform: linux/x86_64
 ```
 
+- ###### 정의된 컨테이너 빌드
+
 ```
-$ docker-compose up -d
+$ docker-compose up
+```
+
+- ###### DB 접속
+
+```
+$ docker exec -it local-db  mysql -u root -p
 ```
 
 ### 스키마 만들기
@@ -60,7 +70,7 @@ CREATE TABLE Product (
 );
 ```
 
-- 브랜드 <-> 카테고리 중간 테이블 만들기
+- ##### 브랜드 <-> 카테고리 중간 테이블 만들기
 
 ```sql
 CREATE TABLE Intermediate (
@@ -84,14 +94,14 @@ DB_PASSWORD=root
 DB_DATABASE=management
 ```
 
-### 실행법
+### 실행
 
-```console
-<!-- 백엔드 -->
-$ cd backend_no-tag
+```
+<!-- 서버 -->
+$ cd server
 $ npm run start
 
-<!-- 프론트 -->
+<!-- 클라이언트 -->
 $ cd client
 $ npm run dev
 ```
