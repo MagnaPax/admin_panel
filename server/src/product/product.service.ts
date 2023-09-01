@@ -15,6 +15,7 @@ import { BrandService } from 'src/brand/brand.service';
 import { CategoryService } from 'src/category/category.service';
 
 import { NotFoundIDException } from 'src/exceptions/custom-exception';
+import { ProductNotFoundException } from 'src/exceptions/custom-exception';
 
 @Injectable()
 export class ProductService {
@@ -101,32 +102,20 @@ export class ProductService {
     return;
   }
 
-  async createProduct(
+  async create(
     imgs: Express.Multer.File[],
     data: CreateProductDto,
   ): Promise<Product> {
     // 중간 테이블 업데이트
     await this.updateIntermediate(data.brand_id, data.category_id);
 
-    // 파일 처리
+    // 저장된 파일 경로 추가
     const filePaths: string[] = [];
     imgs.forEach((img) => filePaths.push(img.path));
-
-    // 파일 경로 추가
     data['file_paths'] = filePaths;
 
     // Product 엔티티를 DB에 저장
     return await this.productRepository.save(data);
-  }
-
-  async create(createProductDto: CreateProductDto) {
-    // 중간 테이블 업데이트
-    await this.updateIntermediate(
-      createProductDto.brand_id,
-      createProductDto.category_id,
-    );
-
-    return await this.productRepository.save(createProductDto);
   }
 
   async findAll() {
@@ -158,6 +147,11 @@ export class ProductService {
       columns,
       this.productRepository,
     );
+
+    // 검색 결과가 빈 배열일 때 에러 반환
+    if (!products.length) throw new ProductNotFoundException();
+
+    //
 
     return products;
   }

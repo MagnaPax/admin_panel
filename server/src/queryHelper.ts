@@ -1,5 +1,6 @@
 import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { type } from 'os';
 
 @Injectable()
 export class Query {
@@ -14,36 +15,35 @@ export class Query {
     const conditions = [];
 
     columnNames.forEach((columnName, index) => {
-      if (values[index] === null) {
+      const value = values[index];
+
+      if (value === null) {
         conditions.push(`${tableName}.${columnName} IS NULL`);
-      } else {
+      } else if (typeof value === 'string') {
+        // 단어를 하나 이상 포함하는지 검사하는 조건을 추가
+        const keywords = value.split(/\s+/).filter(Boolean);
+        if (keywords.length > 0) {
+          const keywordConditions = keywords.map(
+            (keyword) => `${tableName}.${columnName} LIKE :keyword${index}`,
+          );
+          conditions.push(`(${keywordConditions.join(' OR ')})`);
+          keywords.forEach((keyword) => {
+            queryBuilder.setParameter(`keyword${index}`, `%${keyword}%`);
+          });
+        }
+      } else if (typeof value === 'number') {
+        // 숫자 검색
         conditions.push(`${tableName}.${columnName} = :value${index}`);
-        queryBuilder.setParameter(`value${index}`, values[index]);
+        queryBuilder.setParameter(`value${index}`, value);
+      } else if (typeof value === 'boolean') {
+        // boolean 검색
+        conditions.push(`${tableName}.${columnName} = :value${index}`);
+        queryBuilder.setParameter(`value${index}`, value);
       }
     });
 
     queryBuilder.where(conditions.join(' OR '));
 
-    return await queryBuilder.getMany();
-  }
-
-  async findRecordsByValues2(
-    values: any[],
-    columnNames: string[],
-    repository: Repository<any>,
-  ): Promise<any[]> {
-    const queryBuilder = repository.createQueryBuilder();
-    const tableName = repository.metadata.name;
-
-    columnNames.forEach((columnName, index) => {
-      if (values[index] === null) {
-        queryBuilder.andWhere(`${tableName}.${columnName} IS NULL`);
-      } else {
-        queryBuilder.andWhere(`${tableName}.${columnName} = :value${index}`, {
-          [`value${index}`]: values[index],
-        });
-      }
-    });
     return await queryBuilder.getMany();
   }
 

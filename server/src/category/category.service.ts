@@ -100,7 +100,7 @@ export class CategoryService {
       this.categoryRepository,
     );
 
-    if (!categories.length) throw new CategoryDuplicatedException();
+    if (!categories.length) throw new CategoryNotFoundException();
 
     results = categories;
 

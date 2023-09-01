@@ -2,9 +2,9 @@
 </script>
 
 <template>
-  <section class="information">
-    <article>
-      <div>한천희</div>
+  <section class="wrapper">
+    <article class="information">
+      <div>한천희 HAN, Chunhee</div>
       <div>chunhee.han@outlook.com</div>
     </article>
   </section>

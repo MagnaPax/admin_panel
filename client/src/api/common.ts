@@ -54,8 +54,14 @@ export default class CommonApi {
   }
 
   async post(path: string, body: object) {
+    // body 형식에 따라 헤더 결정
+    let header = {}
+    if (body instanceof FormData) header = { 'Content-Type': 'multipart/form-data' }
+    else header = { 'Content-Type': 'application/json' }
+
     const requestURL = this.settingURL(path)
-    const response = await this.axiosInstance.post(requestURL, body)
+    const response = await this.axiosInstance.post(requestURL, body, { headers: header })
+
     console.log('추가한 결과:', JSON.stringify(response.data))
     return response.data
   }

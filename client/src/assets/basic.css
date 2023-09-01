@@ -1,0 +1,499 @@
+@charset "utf-8";
+/* CSS Document */
+@import "reset.css";
+
+:root{
+    background-color: #f2f2f2;
+}
+
+
+
+body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+
+}
+
+
+#app {
+    display: grid;
+    grid-template-columns: 9em 1fr; /* 1번째 열은 자동 크기, 2번째 열은 남은 공간 */
+    grid-template-rows: auto 1fr auto; /* 1번째 행은 자동 크기, 2번째 행은 남은 공간, 3번째 행은 자동 크기 */
+    min-height: 100vh; /* 전체 화면 높이에 맞추기 */
+}
+
+
+/* 사이드 바 */
+.sidebar {
+    background-color: #EADDFF;
+    padding: 10%;
+    grid-column: 1 / 2; /* 1번째 열에 배치 */
+    grid-row: 1 / 4; /* 1번째 행에서 3번째 행까지 배치 */
+}
+
+
+.sidebar a {
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+    text-decoration: none;
+}
+
+.sidebar a:hover {
+    color: #000;
+    font-weight: bold;
+}
+
+.sidebar a.router-link-active {
+    color: #000;
+    font-weight: bold;
+}
+
+
+
+
+/* 헤더 */
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    justify-content: space-between; /* 컨텐츠를 양쪽 끝으로 정렬 */
+    justify-content: flex-end; /* 컨텐츠를 오른쪽으로 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    grid-column: 2 / 3; /* 2번째 열에 배치 */
+}
+
+.logo-container {
+    margin-left: auto;
+}
+
+header .logo {
+    width: 100px;
+    height: 100px;
+}
+
+
+
+/* 푸터 */
+footer {
+    background-color: #333;
+    color: #fff;
+    padding: 1%;
+    grid-column: 2 / 3; /* 2번째 열에 배치 */
+}
+
+
+
+/* 메인 */
+main {
+    grid-column: 2 / 3; /* 2번째 열에 배치 */
+}
+
+/* 홈뷰 */
+article.information {
+    align-items: center;
+    text-align: center;
+    height: 75vh;
+}
+
+
+
+/* 미디어 쿼리: 휴대폰 화면에서만 적용 */
+@media (max-width: 768px) {
+    #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .sidebar {
+        height: 100px;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        padding: 5%;
+        margin: 1%;
+        grid-column: 1 / 2;
+        grid-row: auto;
+    }
+
+    main {
+        grid-column: 1 / 2;
+        grid-row: 3 / 4;
+    }
+
+    article.information {
+        padding-top: 40%;
+        text-align: center;
+    }
+
+    header {
+        display: none;
+    }
+
+    footer {
+        display: none;
+    }
+}
+
+
+
+
+
+
+
+
+/* ********* 
+컴포넌트 스타일 
+********** */
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;  /* article 사이의 간격 */
+    padding: 1%;
+}
+
+article {
+    background-color: #fff;
+    border: 0.1em solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+article h3 {
+    font-size: 1.7em;
+    margin-bottom: 1%;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.container label {
+    font-weight: bold;
+}
+
+
+/* text입력, select */
+.input-group,
+.select-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label,
+.select-group label {
+    margin-bottom: 0.7%;
+    color: #a30056;
+}
+
+.input {
+    padding: 1%;
+    border: 0.1em solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    width: 20%;
+    height: 0.4em;
+}
+
+select {
+    padding: 0.2%;
+    border: 0.1em solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    width: 22.3%;
+    height: 2em;
+}
+
+
+
+
+/* 선택된 목록 */
+.inputted-list{
+    margin-bottom: 1%;
+}
+
+.inputted-list label {
+    color: #007bff;
+    margin-bottom: 1%;
+}
+
+.inputted-list ul{
+    margin: 0.5em;
+}
+
+.inputted-list li{
+    color: #4F378B;
+}
+
+.inputted-list .input-reset-button{
+    padding: 0.5% 0.7%;
+    font-size: 1em;
+    background-color: #4f378a;
+    width: 20%;
+    color: #ccc;
+}
+
+
+/* button 클래스 공통 */
+.button {
+    padding: 1% 2%;
+    background-color: #601410;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+input.button,
+button.button {
+    width: 30%;
+    font-size: 1em;
+    display: block;
+    margin: 0 auto;
+}
+
+.button:hover,
+.input-reset-button:hover {
+    background-color: #555;
+}
+
+/* 에러 메세지 */
+.error-message {
+    color: red;
+    margin-top: 1%;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+/*  */
+.from-to {
+    color: #a30056;
+    margin-left: 1%;
+}
+
+.showAll-label {
+    font-size: 1.3em;
+    font-weight: bold;
+    cursor: pointer;
+    color: #007bff;
+}
+
+.showAll-label:hover {
+    color: #ffb687;
+}
+
+
+
+
+
+
+/* ************* 
+ProductView 스타일 
+**************** */
+
+/* 라디오 버튼 그룹 스타일 */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    width: 10%;
+  }
+  
+.radio-group label {
+    font-size: 1em;
+    margin-right: 2%;
+}
+
+.radio-group label.title,
+.img-upload-group label.title {
+    color: #a30056;
+}
+
+.radio-inputs {
+    display: flex;
+    margin-bottom: 2%;
+    width: 500%;
+}
+
+
+  .radio-group input[type="radio"] {
+      /* 기본 라디오 버튼 숨김 */
+    display: none; 
+}
+
+.radio-group input[type="radio"] + label {
+    cursor: pointer;
+    padding: 0.3em 0.6em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* 선택된 라디오 버튼 스타일 */
+.radio-group input[type="radio"]:checked + label {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #fff;
+}
+
+  /* 호버 효과 */
+.radio-group input[type="radio"]:hover + label {
+    background-color: #555;
+}
+
+
+
+
+/* 이미지 업로드 그룹 */
+.img-upload-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10%;
+}
+
+.img-upload-group input[type="file"] {
+    margin-top: 0.7%;
+    font-size: 1em;
+}
+
+.img-upload-group span {
+    font-size: 1em;
+    width: 20%;
+    height: 0.4em;
+    color: red;
+    font-weight: bold;
+    margin-top: 1%;
+}
+
+.img-upload-group .inputted-list {
+    margin-top: 1%;
+}
+
+
+
+
+
+
+
+
+
+/* 검색 */
+.input-group div button{
+    margin-left: 0.5%;
+    height: 2.4em;
+    color: #ccc;
+    background-color: #4f378a;
+}
+
+
+
+
+/* 제품 목록 보기 */
+.list-group {
+    display: flex;
+    flex-direction: column;
+
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 10px 0;
+    background-color: #f9f9f9;
+}
+
+.list-group h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.list-group ul {
+    list-style: none;
+    padding: 0;
+}
+
+.list-group li {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.list-group li:last-child {
+    margin-bottom: 0;
+}
+
+/* 검색 결과 정렬 */
+.sort-option-group {
+    margin-top: 1%;
+    margin-bottom: 5%;
+}
+
+.sort-option-group h4 {
+    font-size: 1.2em;
+}
+
+/*  */
+.sort-labels {
+    display: flex;
+    margin-top: 1%;
+}
+
+.sort-label {
+    font-size: 1em;
+    font-weight: bold;
+    color: #007bff;
+    padding-right: 1.5em;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.sort-label:hover {
+    color: #ffb687;
+}
+
+.sort-label.active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+
+
+/* 제품 카드 보기 */
+.product-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.product-card {
+    border: 0.09em solid #ddd;
+    padding: 6%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.product-details {
+    margin-top: 1%;
+}
+
+.product-details h3 {
+    font-size: 1.3em;
+    margin: 0 0 2%;
+}
+
+.image-container {
+    overflow: hidden;
+    height: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.product-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
