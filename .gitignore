@@ -306,3 +306,9 @@ yarn-error.log
 
 # 물리적 파일 저장소
 /server/storage/
+
+# DB 컨테이너 호스트 볼륨 마운트
+/db/maria/data/
+
+# 환경 설정 파일들
+.env*
