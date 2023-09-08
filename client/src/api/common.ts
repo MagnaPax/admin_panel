@@ -5,7 +5,7 @@ import { useCounterStore } from '@/stores/counter'
 export default class CommonApi {
   counterStore = useCounterStore()
 
-  host: string = 'http://localhost:5425/'
+  host: string = 'https://port-0-admin-panel-server-jvvy2blm7qb6m3.sel5.cloudtype.app/'
   axiosInstance = axios.create({
     baseURL: this.host,
     responseType: 'json',
