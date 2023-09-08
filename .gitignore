@@ -312,3 +312,6 @@ yarn-error.log
 
 # 환경 설정 파일들
 .env*
+
+# 호스트의 스크립트들
+/db/maria/init/*.sql
