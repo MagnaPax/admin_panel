@@ -130,6 +130,7 @@ CREATE TABLE Product (
   sex VARCHAR(10) COMMENT '남, 여, 공용 등을 나타내는 값',
   is_kids BOOLEAN COMMENT '키즈 상품 여부를 나타내는 값',
   sales_quantity INT COMMENT '판매 수량',
+  file_paths VARCHAR(255) COMMENT '파일 경로',
   FOREIGN KEY (brand_id) REFERENCES Brand (brand_id),
   FOREIGN KEY (category_id) REFERENCES Category (category_id)
 );
