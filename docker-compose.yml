@@ -1,0 +1,20 @@
+version: '3'
+services:
+  db:
+    image: mariadb:10.6.8
+    container_name: admin_panel
+    restart: always
+    ports:
+      - 33060:3306
+    env_file: .env.db.docker
+    volumes:
+    # 볼륨생성 & 바인드마운트
+    # 컨테이너 밖에 있는 호스트의 경로(탐색기에서 접근 가능)와 컨테이너 안에 있는 경로를 연결
+    # 이것을 안 하면 컨테이너가 정지 혹은 삭제될때 데이터가 모두 사라짐
+    # 호스트 파일 시스템의 데이터 디렉토리:컨테이너 내부
+      # Docker 컨테이너 최초 실행 시 작동시킬 스크립트들(주로 데이터 생성)
+      - ./db/maria/init:/docker-entrypoint-initdb.d
+      # 실제 DB 데이터
+      - ./db/maria/data:/var/lib/mysql
+      # MySQL 서버의 구성 설정. MySQL 서버가 시작될때마다 실행
+      - ./db/maria/conf:/etc/mysql/conf.d
